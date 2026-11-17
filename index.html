@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZAPGRAM - Mensagens Ultrarrápidas & Premium</title>
+  
+  <!-- Fontes Google: Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+          },
+          colors: {
+            tg: {
+              bg: '#0f0f0f',
+              sidebar: '#1e1e1e',
+              panel: '#282828',
+              chatBg: '#0f141c',
+              bubbleIn: '#212d3b',
+              bubbleOut: '#6c5ce7',
+              primary: '#00d2d3',
+              primaryHover: '#01a3a4',
+              gold: '#ffc107',
+              muted: '#707579',
+              border: '#2c2c2c',
+              hover: '#282828',
+              active: '#2b5278'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Wallpaper pontilhado clássico do ZAPGRAM */
+    .zapgram-wallpaper {
+      background-color: #0d1117;
+      background-image: radial-gradient(#1f2937 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* Linha de Scanner do QR Code */
+    @keyframes scanAnimation {
+      0% { top: 4px; opacity: 0.8; }
+      50% { top: 92%; opacity: 1; }
+      100% { top: 4px; opacity: 0.8; }
+    }
+    .scan-line {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #00d2d3, #10b981, transparent);
+      box-shadow: 0 0 12px #00d2d3;
+      border-radius: 4px;
+      animation: scanAnimation 2.8s ease-in-out infinite;
+    }
+
+    /* Efeito de brilho da Estrela Premium */
+    @keyframes starPulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #ffc107); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #ffc107); }
+    }
+    .premium-star {
+      display: inline-block;
+      animation: starPulse 2s infinite ease-in-out;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Pontos de "digitando..." animados */
+    @keyframes typingDot {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-4px); opacity: 1; }
+    }
+    .dot-1 { animation: typingDot 1.2s infinite ease-in-out 0s; }
+    .dot-2 { animation: typingDot 1.2s infinite ease-in-out 0.2s; }
+    .dot-3 { animation: typingDot 1.2s infinite ease-in-out 0.4s; }
+  </style>
+</head>
+<body class="bg-tg-bg text-white font-sans h-screen flex flex-col overflow-hidden select-none">
+
+  <!-- ================= TELA DE LOGIN POR QR CODE (ZAPGRAM) ================= -->
+  <div id="screen-login" class="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#0f0f0f] relative z-50">
+    <div class="max-w-md w-full flex flex-col items-center text-center">
+      
+      <!-- Logo Oficial ZAPGRAM com Raio -->
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-teal-500/30">
+          ⚡
+        </div>
+        <div class="text-left">
+          <span class="font-black text-3xl tracking-wider text-white">ZAP<span class="text-teal-400">GRAM</span></span>
+          <span class="block text-[10px] uppercase font-bold tracking-widest text-tg-muted">WEB MESSENGER & BUSINESS</span>
+        </div>
+      </div>
+
+      <!-- QR Code Interativo do ZAPGRAM -->
+      <div onclick="performLogin()" class="relative p-4 bg-white rounded-3xl shadow-2xl shadow-teal-500/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200" title="Clique para escanear e entrar automaticamente">
+        <div id="qr-scan-line" class="scan-line"></div>
+
+        <svg class="w-56 h-56" viewBox="0 0 100 100" fill="none">
+          <rect x="5" y="5" width="26" height="26" rx="4" fill="#111827" />
+          <rect x="9" y="9" width="18" height="18" rx="2" fill="white" />
+          <rect x="13" y="13" width="10" height="10" rx="1.5" fill="#111827" />
+
+          <rect x="69" y="5" width="26" height="26" rx="4" fill="#111827" />
+          <rect x="73" y="9" width="18" height="18" rx="2" fill="white" />
+          <rect x="77" y="13" width="10" height="10" rx="1.5" fill="#111827" />
+
+          <rect x="5" y="69" width="26" height="26" rx="4" fill="#111827" />
+          <rect x="9" y="73" width="18" height="18" rx="2" fill="white" />
+          <rect x="13" y="77" width="10" height="10" rx="1.5" fill="#111827" />
+
+          <rect x="36" y="8" width="5" height="5" fill="#111827" />
+          <rect x="46" y="8" width="5" height="10" fill="#111827" />
+          <rect x="56" y="8" width="6" height="5" fill="#111827" />
+          <rect x="36" y="18" width="12" height="5" fill="#111827" />
+          <rect x="54" y="18" width="8" height="8" fill="#111827" />
+
+          <rect x="8" y="36" width="5" height="10" fill="#111827" />
+          <rect x="18" y="36" width="10" height="5" fill="#111827" />
+          <rect x="8" y="52" width="12" height="6" fill="#111827" />
+          <rect x="23" y="48" width="6" height="12" fill="#111827" />
+
+          <rect x="70" y="36" width="10" height="6" fill="#111827" />
+          <rect x="84" y="38" width="6" height="12" fill="#111827" />
+          <rect x="72" y="48" width="10" height="8" fill="#111827" />
+          <rect x="68" y="60" width="8" height="6" fill="#111827" />
+
+          <rect x="36" y="68" width="12" height="6" fill="#111827" />
+          <rect x="52" y="70" width="6" height="12" fill="#111827" />
+          <rect x="40" y="80" width="18" height="6" fill="#111827" />
+          <rect x="68" y="76" width="6" height="14" fill="#111827" />
+          <rect x="78" y="72" width="12" height="6" fill="#111827" />
+          <rect x="80" y="84" width="12" height="6" fill="#111827" />
+
+          <circle cx="50" cy="50" r="14" fill="white" />
+          <circle cx="50" cy="50" r="12" fill="#00d2d3" />
+          <path d="M 52,41 L 43,51 L 49,51 L 47,59 L 57,48 L 51,48 Z" fill="white" />
+        </svg>
+
+        <div id="qr-success-overlay" class="hidden absolute inset-0 bg-white/95 rounded-3xl flex flex-col items-center justify-center gap-2">
+          <div class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center text-3xl font-black shadow-lg">
+            ✓
+          </div>
+          <span class="text-xs font-bold text-gray-800">Conectado ao ZAPGRAM!</span>
+        </div>
+      </div>
+
+      <h1 class="text-2xl font-black text-white mt-8 mb-4 tracking-tight">
+        Entrar no <span class="text-teal-400">ZAPGRAM</span> por QR Code
+      </h1>
+
+      <ol class="text-left text-sm text-tg-muted space-y-2 mb-8 max-w-sm">
+        <li class="flex items-start gap-2.5">
+          <span class="font-bold text-teal-400">1.</span>
+          <span>Abra o <strong>ZAPGRAM</strong> no seu celular</span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="font-bold text-teal-400">2.</span>
+          <span>Vá em <strong>Configurações</strong> &gt; <strong>Dispositivos</strong> &gt; <strong>Conectar Desktop</strong></span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="font-bold text-teal-400">3.</span>
+          <span>Aponte seu celular para esta tela para confirmar</span>
+        </li>
+      </ol>
+
+      <div class="flex flex-col gap-3 w-full">
+        <button onclick="performLogin()" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-teal-500/20 active:scale-[0.98] transition">
+          ⚡ Escanear e Conectar como Fundador
+        </button>
+
+        <button onclick="alert('Dica: Como este é um app interativo, basta clicar no QR Code ou no botão verde acima para entrar!')" class="py-2.5 text-xs font-bold text-teal-400 hover:text-teal-300 uppercase tracking-wider transition">
+          Entrar com número de telefone
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TELA PRINCIPAL DO APP DE CHAT ================= -->
+  <div id="screen-app" class="hidden flex-1 flex h-screen overflow-hidden relative">
+    
+    <!-- ================= DRAWER MENU LATERAL (ESTILO TELEGRAM / MONETIZAÇÃO) ================= -->
+    <div id="menu-drawer-backdrop" onclick="toggleMenuDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity"></div>
+    <div id="menu-drawer" class="fixed top-0 left-0 bottom-0 w-80 bg-tg-sidebar border-r border-tg-border z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between">
+      
+      <!-- Topo do Perfil do Fundador -->
+      <div class="p-5 bg-gradient-to-b from-[#182a38] to-tg-sidebar border-b border-tg-border">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 via-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-teal-500/20 ring-2 ring-yellow-400">
+            OZ
+          </div>
+          <button onclick="toggleMenuDrawer()" class="p-1 rounded-full text-tg-muted hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-2 mb-0.5">
+          <h3 class="font-black text-base text-white">Oziel Leite</h3>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-black shadow-sm flex items-center gap-1">
+            👑 FUNDADOR
+          </span>
+          <span id="user-premium-badge" class="text-sm font-bold text-yellow-400 premium-star" title="Membro ZAPGRAM VIP">⭐</span>
+        </div>
+        <div class="text-xs text-teal-400 font-bold font-mono">Idealizador &amp; CEO • @ozielleite</div>
+        
+        <!-- Saldo ZapStars de 11 DÍGITOS (Tesouraria do Fundador) -->
+        <div class="mt-3.5 py-2 px-3 rounded-2xl bg-gradient-to-r from-yellow-500/15 via-amber-500/20 to-transparent border border-yellow-500/40 shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="text-yellow-400 text-xl premium-star">⭐</span>
+            <div>
+              <div class="text-[9px] uppercase font-black text-yellow-400/90 tracking-widest">Tesouro do Fundador</div>
+              <div class="text-xs font-bold text-white">ZapStars (11 Dígitos)</div>
+            </div>
+          </div>
+          <span id="zapstars-balance" class="text-sm font-black font-mono text-yellow-400 tracking-tight">10.000.000.000 ⭐</span>
+        </div>
+      </div>
+
+      <!-- Links de Monetização & Recursos -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-1 text-sm font-medium">
+        
+        <!-- 1. ZAPGRAM Premium Vitalício -->
+        <button onclick="openPremiumModal()" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span class="text-xl">⭐</span>
+            <div>
+              <div class="font-bold text-white group-hover:text-yellow-400 transition flex items-center gap-1.5">
+                ZAPGRAM Premium
+                <span class="text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black uppercase">VITALÍCIO</span>
+              </div>
+              <div class="text-xs text-tg-muted">Plano Master liberado para o Fundador</div>
+            </div>
+          </div>
+          <span class="text-tg-muted group-hover:text-white">›</span>
+        </button>
+
+        <!-- 2. ZapGram Ads & Monetização de Canais -->
+        <button onclick="alert('📢 Painel ZAPGRAM Ads: Como fundador, você tem acesso aos relatórios de faturamento total de todos os anúncios veiculados na rede!')" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span class="text-xl">📢</span>
+            <div>
+              <div class="font-bold text-white group-hover:text-teal-400 transition">ZAPGRAM Ads & Canais</div>
+              <div class="text-xs text-tg-muted">Gestão de faturamento global de anúncios</div>
+            </div>
+          </div>
+          <span class="text-tg-muted group-hover:text-white">›</span>
+        </button>
+
+        <!-- 3. ZAPGRAM Business -->
+        <button onclick="alert('🏢 ZAPGRAM Business: Ferramentas corporativas com chatbots de vendas e catálogo integrado.')" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span class="text-xl">💼</span>
+            <div>
+              <div class="font-bold text-white group-hover:text-teal-400 transition">ZAPGRAM Business</div>
+              <div class="text-xs text-tg-muted">Respostas automáticas para empresas</div>
+            </div>
+          </div>
+          <span class="text-tg-muted group-hover:text-white">›</span>
+        </button>
+
+        <!-- 4. Mercado de @Usernames Raros -->
+        <button onclick="alert('🏷️ Mercado Fragment ZAPGRAM: Como Idealizador, você possui a custódia de todos os @nomes raros e pode leiloá-los!')" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span class="text-xl">🏷️</span>
+            <div>
+              <div class="font-bold text-white group-hover:text-teal-400 transition">Mercado de @Usernames</div>
+              <div class="text-xs text-tg-muted">Custódia e leilão de nomes colecionáveis</div>
+            </div>
+          </div>
+          <span class="text-tg-muted group-hover:text-white">›</span>
+        </button>
+
+      </div>
+
+      <!-- Rodapé do Menu com Logout -->
+      <div class="p-3 border-t border-tg-border bg-tg-panel/40">
+        <button onclick="performLogout()" class="w-full p-2.5 rounded-xl text-rose-400 hover:bg-rose-500/10 font-bold flex items-center justify-center gap-2 text-sm transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Desconectar Conta</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ================= MODAL ZAPGRAM PREMIUM ================= -->
+    <div id="modal-premium" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-tg-sidebar border border-tg-border rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
+        <button onclick="closePremiumModal()" class="absolute top-4 right-4 p-1.5 rounded-full text-tg-muted hover:text-white">
+          ✕
+        </button>
+
+        <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-4xl shadow-xl shadow-yellow-500/30 mb-4 premium-star">
+          ⭐
+        </div>
+
+        <h2 class="text-2xl font-black text-white mb-1">ZAPGRAM Premium</h2>
+        <p class="text-xs text-tg-muted mb-6">Status da Conta do Fundador.</p>
+
+        <div class="space-y-3 text-left mb-6 font-medium text-xs">
+          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-tg-panel/60 border border-tg-border">
+            <span class="text-lg">👑</span>
+            <div>
+              <div class="font-bold text-white">Conta Master do Idealizador</div>
+              <div class="text-tg-muted">Acesso vitalício irrestrito a todas as ferramentas.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-tg-panel/60 border border-tg-border">
+            <span class="text-lg">⚡</span>
+            <div>
+              <div class="font-bold text-white">Tesouraria de 11 Dígitos</div>
+              <div class="text-tg-muted">10.000.000.000 de ZapStars disponíveis para emitir ou apoiar.</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-tg-panel/60 border border-tg-border">
+            <span class="text-lg">🚫</span>
+            <div>
+              <div class="font-bold text-white">Isenção Total de Anúncios</div>
+              <div class="text-tg-muted">Navegação 100% limpa em todos os canais e grupos.</div>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="closePremiumModal()" class="w-full py-3.5 rounded-2xl bg-emerald-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
+          ✓ Status: Fundador Master Ativo
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= SIDEBAR LATERAL (LISTA DE CHATS) ================= -->
+    <aside id="sidebar" class="w-full md:w-80 lg:w-96 bg-tg-sidebar border-r border-tg-border flex flex-col flex-shrink-0 z-10 transition-transform duration-200">
+      
+      <!-- Topo da Marca: Menu Hambúrguer, Logo ZAPGRAM e Badge do Fundador -->
+      <div class="px-4 pt-3.5 pb-2.5 flex items-center justify-between border-b border-tg-border/50">
+        <div class="flex items-center gap-2.5">
+          <button onclick="toggleMenuDrawer()" class="p-1.5 rounded-lg hover:bg-tg-hover text-tg-muted hover:text-white transition" title="Abrir Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow-lg shadow-teal-500/20">
+            ⚡
+          </div>
+          <div>
+            <span class="font-black text-lg tracking-wider text-white">ZAP<span class="text-teal-400">GRAM</span></span>
+          </div>
+        </div>
+
+        <!-- Botão de Acesso Rápido com Coroa de Fundador -->
+        <button onclick="toggleMenuDrawer()" title="Conta do Fundador (10B ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-400 border border-yellow-400/40 flex items-center gap-1.5 text-xs font-black transition">
+          <span>👑</span>
+          <span>10B ⭐</span>
+        </button>
+      </div>
+
+      <!-- Barra de Pesquisa -->
+      <div class="p-3">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="search-input" 
+            oninput="handleSearch(this.value)"
+            placeholder="Pesquisar conversas..." 
+            class="w-full bg-[#141414] border border-transparent focus:border-teal-400 text-sm rounded-full py-1.5 pl-9 pr-4 text-white placeholder-tg-muted focus:outline-none transition font-sans"
+          >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-2.5 text-tg-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Abas / Pastas de Conversa -->
+      <div class="flex items-center border-b border-tg-border px-2 text-xs font-bold text-tg-muted overflow-x-auto">
+        <button onclick="filterFolder('all')" class="folder-tab px-3.5 py-2.5 text-teal-400 border-b-2 border-teal-400 transition whitespace-nowrap">
+          Todas
+        </button>
+        <button onclick="filterFolder('bots')" class="folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+          ZapBots ⚡
+        </button>
+        <button onclick="filterFolder('groups')" class="folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+          Grupos
+        </button>
+        <button onclick="filterFolder('channels')" class="folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+          Canais 📢
+        </button>
+      </div>
+
+      <!-- Lista de Contatos / Conversas -->
+      <div id="chat-list" class="flex-1 overflow-y-auto">
+        <!-- Inserido dinamicamente via JS -->
+      </div>
+    </aside>
+
+    <!-- ================= ÁREA PRINCIPAL DE CONVERSA ================= -->
+    <main id="chat-window" class="flex-1 flex flex-col zapgram-wallpaper relative">
+
+      <!-- Header da Conversa Atual -->
+      <header id="chat-header" class="h-14 bg-tg-sidebar/95 backdrop-blur border-b border-tg-border flex items-center justify-between px-4 z-10 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <button onclick="closeChatMobile()" class="md:hidden p-1.5 rounded-full hover:bg-tg-hover text-tg-muted hover:text-white mr-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <div id="active-avatar" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 bg-teal-500">
+            ⚡
+          </div>
+
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h2 id="active-name" class="font-bold text-base leading-tight">ZAPGRAM Assistant</h2>
+              <span id="active-badge" class="text-xs"></span>
+            </div>
+            <div id="active-status" class="text-xs text-teal-400 flex items-center gap-1.5 font-medium">
+              online
+            </div>
+          </div>
+        </div>
+
+        <!-- Ícones de Ação -->
+        <div class="flex items-center gap-1 text-tg-muted">
+          <!-- Botão Enviar Gorjeta de Fundador -->
+          <button onclick="sendFounderTip()" title="Enviar 10.000 ZapStars da Tesouraria do Fundador" class="p-2 rounded-full hover:bg-tg-hover text-yellow-400 transition flex items-center gap-1 text-xs font-black">
+            <span class="text-base">⭐</span>
+            <span class="hidden sm:inline">Doar 10.000 ⭐</span>
+          </button>
+
+          <button class="p-2 rounded-full hover:bg-tg-hover hover:text-white transition" title="Mais Opções">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Lista de Mensagens do Chat Ativo -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-4 md:px-8 lg:px-24 space-y-3">
+        <!-- Inserido dinamicamente via JS -->
+      </div>
+
+      <!-- Indicador Flutuante de Digitando -->
+      <div id="typing-indicator" class="hidden px-6 py-1 text-xs text-tg-muted flex items-center gap-2">
+        <span id="typing-name">ZapBot</span> está digitando
+        <span class="inline-flex items-center gap-0.5">
+          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full dot-1"></span>
+          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full dot-2"></span>
+          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full dot-3"></span>
+        </span>
+      </div>
+
+      <!-- Painel Seletor de Emojis Pop-up -->
+      <div id="emoji-picker" class="hidden absolute bottom-16 left-6 md:left-24 bg-tg-sidebar border border-tg-border p-3 rounded-2xl shadow-2xl z-30 grid grid-cols-6 gap-2 text-2xl">
+        <button onclick="insertEmoji('👑')" class="hover:scale-125 transition p-1">👑</button>
+        <button onclick="insertEmoji('⭐')" class="hover:scale-125 transition p-1">⭐</button>
+        <button onclick="insertEmoji('⚡')" class="hover:scale-125 transition p-1">⚡</button>
+        <button onclick="insertEmoji('😀')" class="hover:scale-125 transition p-1">😀</button>
+        <button onclick="insertEmoji('🔥')" class="hover:scale-125 transition p-1">🔥</button>
+        <button onclick="insertEmoji('👍')" class="hover:scale-125 transition p-1">👍</button>
+        <button onclick="insertEmoji('❤️')" class="hover:scale-125 transition p-1">❤️</button>
+        <button onclick="insertEmoji('🎉')" class="hover:scale-125 transition p-1">🎉</button>
+        <button onclick="insertEmoji('🚀')" class="hover:scale-125 transition p-1">🚀</button>
+        <button onclick="insertEmoji('👏')" class="hover:scale-125 transition p-1">👏</button>
+        <button onclick="insertEmoji('😎')" class="hover:scale-125 transition p-1">😎</button>
+        <button onclick="insertEmoji('✨')" class="hover:scale-125 transition p-1">✨</button>
+      </div>
+
+      <!-- Input Footer de Envio de Mensagens -->
+      <footer class="p-3 md:px-8 lg:px-24 flex items-center gap-2 bg-transparent z-10 flex-shrink-0">
+        <div class="flex-1 bg-tg-sidebar border border-tg-border rounded-2xl flex items-center px-3 py-1 shadow-md focus-within:border-teal-400 transition">
+          <button onclick="toggleEmojiPicker()" class="p-2 text-tg-muted hover:text-white transition rounded-full" title="Emojis">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
+          <input 
+            type="text" 
+            id="message-input" 
+            onkeydown="handleKeyDown(event)"
+            placeholder="Mensagem rápida como Fundador..." 
+            class="flex-1 bg-transparent py-2.5 px-2 text-white placeholder-tg-muted text-sm focus:outline-none"
+          >
+
+          <button onclick="sendAttachment()" class="p-2 text-tg-muted hover:text-white transition rounded-full" title="Anexar arquivo">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+          </button>
+        </div>
+
+        <button 
+          id="btn-send" 
+          onclick="sendMessage()"
+          class="w-12 h-12 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/30 active:scale-95 transition"
+          title="Enviar Mensagem"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90 transform -translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+          </svg>
+        </button>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- ================= JAVASCRIPT & LÓGICA ================= -->
+  <script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playZapSound(type = 'sent') {
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        if (type === 'login' || type === 'premium') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((f, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(f, audioCtx.currentTime + idx * 0.08);
+            g.gain.setValueAtTime(0.25, audioCtx.currentTime + idx * 0.08);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.35);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(audioCtx.currentTime + idx * 0.08);
+            o.stop(audioCtx.currentTime + idx * 0.08 + 0.35);
+          });
+          return;
+        }
+
+        if (type === 'sent') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(360, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(820, audioCtx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.09);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.09);
+        } else {
+          const now = audioCtx.currentTime;
+          [523.25, 783.99].forEach((freq, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(freq, now + i * 0.08);
+            g.gain.setValueAtTime(0.25, now + i * 0.08);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.22);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(now + i * 0.08);
+            o.stop(now + i * 0.08 + 0.22);
+          });
+        }
+      } catch (e) {}
+    }
+
+    // ================= ESTADO DE MONETIZAÇÃO DO FUNDADOR =================
+    // 11 DÍGITOS = 10.000.000.000 (Dez Bilhões de ZapStars)
+    const FOUNDER_STARS = 10000000000;
+    let zapStars = parseInt(localStorage.getItem('zapgram_stars')) || FOUNDER_STARS;
+
+    if (zapStars < FOUNDER_STARS) {
+      zapStars = FOUNDER_STARS;
+      localStorage.setItem('zapgram_stars', zapStars.toString());
+    }
+
+    function formatNumber(num) {
+      return num.toLocaleString('pt-BR');
+    }
+
+    function updateStarsDisplay() {
+      const el = document.getElementById('zapstars-balance');
+      if (el) el.textContent = formatNumber(zapStars) + ' ⭐';
+    }
+
+    function sendFounderTip() {
+      const tipAmount = 10000; // Doa 10 mil de cada vez
+      if (zapStars >= tipAmount) {
+        zapStars -= tipAmount;
+        localStorage.setItem('zapgram_stars', zapStars.toString());
+        updateStarsDisplay();
+        playZapSound('sent');
+        alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars para o canal!\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐.`);
+      }
+    }
+
+    function openPremiumModal() {
+      document.getElementById('modal-premium').classList.remove('hidden');
+    }
+
+    function closePremiumModal() {
+      document.getElementById('modal-premium').classList.add('hidden');
+    }
+
+    function toggleMenuDrawer() {
+      const drawer = document.getElementById('menu-drawer');
+      const backdrop = document.getElementById('menu-drawer-backdrop');
+      const isOpen = !drawer.classList.contains('-translate-x-full');
+
+      if (isOpen) {
+        drawer.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      } else {
+        drawer.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      }
+    }
+
+    // ================= FLUXO DE LOGIN / LOGOUT =================
+    function performLogin() {
+      const overlay = document.getElementById('qr-success-overlay');
+      overlay.classList.remove('hidden');
+      playZapSound('login');
+
+      setTimeout(() => {
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-app').classList.remove('hidden');
+        renderChatList();
+        selectChat(activeChatId);
+        updateStarsDisplay();
+      }, 700);
+    }
+
+    function performLogout() {
+      if (confirm('Deseja realmente desconectar e voltar para a tela de QR Code do ZAPGRAM?')) {
+        toggleMenuDrawer();
+        document.getElementById('qr-success-overlay').classList.add('hidden');
+        document.getElementById('screen-app').classList.add('hidden');
+        document.getElementById('screen-login').classList.remove('hidden');
+      }
+    }
+
+    // ================= DADOS E CONTATOS DO ZAPGRAM =================
+    const defaultChats = [
+      {
+        id: 1,
+        name: 'ZAPGRAM Assistant ⚡',
+        category: 'bots',
+        avatarBg: 'bg-gradient-to-tr from-teal-500 to-emerald-400',
+        avatarText: '⚡',
+        status: 'zapbot oficial',
+        isChannel: false,
+        unread: 0,
+        messages: [
+          { text: 'Saudações, Oziel! Seja bem-vindo ao ZAPGRAM como Idealizador e Fundador!', fromMe: false, time: '14:20' },
+          { text: 'Sua conta foi configurada com o status de Fundador 👑 e sua tesouraria está abastecida com 10.000.000.000 de ZapStars (11 dígitos)! ⭐', fromMe: false, time: '14:21' }
+        ]
+      },
+      {
+        id: 2,
+        name: 'Nexus Crypto Alerts',
+        category: 'channels',
+        avatarBg: 'bg-gradient-to-tr from-purple-600 to-indigo-500',
+        avatarText: '📈',
+        status: 'canal oficial • 24.8K inscritos',
+        isChannel: true,
+        unread: 2,
+        messages: [
+          { text: '🚨 ALERTA: Bitcoin rompeu a resistência e superou os $65.000 USDT!', fromMe: false, time: '09:42' },
+          { text: 'Confira as posições no seu simulador de corretora. 🚀', fromMe: false, time: '09:43' }
+        ]
+      },
+      {
+        id: 3,
+        name: 'Duo (Duolingo)',
+        category: 'bots',
+        avatarBg: 'bg-gradient-to-tr from-green-500 to-lime-400',
+        avatarText: '🦉',
+        status: 'online',
+        isChannel: false,
+        unread: 1,
+        messages: [
+          { text: 'Ei! Já praticou seus 15 minutos de inglês hoje no seu clone? 🔥', fromMe: false, time: '12:15' }
+        ]
+      },
+      {
+        id: 4,
+        name: 'Devs Brasil 💻',
+        category: 'groups',
+        avatarBg: 'bg-gradient-to-tr from-amber-500 to-orange-500',
+        avatarText: '👥',
+        status: '1.428 membros',
+        isChannel: false,
+        unread: 0,
+        messages: [
+          { text: 'A tesouraria de 11 dígitos do ZAPGRAM para o Fundador ficou lendária!', fromMe: false, time: 'Ontem' },
+          { text: 'Sim! 10 bilhões de ZapStars para gerenciar e incentivar o ecossistema!', fromMe: true, time: 'Ontem' }
+        ]
+      }
+    ];
+
+    let chats = JSON.parse(localStorage.getItem('zapgram_chats')) || defaultChats;
+    let activeChatId = chats[0].id;
+    let currentFolder = 'all';
+
+    function saveChats() {
+      localStorage.setItem('zapgram_chats', JSON.stringify(chats));
+    }
+
+    function renderChatList(filterText = '') {
+      const container = document.getElementById('chat-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const filtered = chats.filter(chat => {
+        const matchesSearch = chat.name.toLowerCase().includes(filterText.toLowerCase());
+        const matchesFolder = currentFolder === 'all' || chat.category === currentFolder;
+        return matchesSearch && matchesFolder;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="p-6 text-center text-tg-muted text-sm">Nenhuma conversa encontrada.</div>';
+        return;
+      }
+
+      filtered.forEach(chat => {
+        const lastMsg = chat.messages[chat.messages.length - 1];
+        const isActive = chat.id === activeChatId;
+
+        const div = document.createElement('div');
+        div.className = `p-3 flex items-center gap-3 cursor-pointer transition ${isActive ? 'bg-tg-active/40 border-l-4 border-teal-400' : 'hover:bg-tg-hover'}`;
+        div.onclick = () => selectChat(chat.id);
+
+        div.innerHTML = `
+          <div class="relative">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0 ${chat.avatarBg}">
+              ${chat.avatarText}
+            </div>
+            ${chat.status === 'online' ? '<span class="w-3.5 h-3.5 bg-emerald-400 border-2 border-tg-sidebar rounded-full absolute bottom-0 right-0"></span>' : ''}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-baseline mb-1">
+              <div class="flex items-center gap-1.5 truncate">
+                <h3 class="font-bold text-sm text-white truncate">${chat.name}</h3>
+                ${chat.category === 'channels' ? '<span class="text-xs text-tg-muted">📢</span>' : ''}
+              </div>
+              <span class="text-[11px] text-tg-muted font-normal">${lastMsg ? lastMsg.time : ''}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <p class="text-tg-muted truncate pr-2">
+                ${lastMsg ? (lastMsg.fromMe ? '<span class="text-teal-400 font-bold">Você: </span>' : '') + lastMsg.text : 'Sem mensagens'}
+              </p>
+              ${chat.unread > 0 ? `<span class="bg-gradient-to-r from-teal-500 to-emerald-400 text-black font-extrabold text-[10px] px-2 py-0.5 rounded-full flex-shrink-0 shadow-sm">${chat.unread}</span>` : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function selectChat(id) {
+      activeChatId = id;
+      const chat = chats.find(c => c.id === id);
+      if (chat) {
+        chat.unread = 0;
+        saveChats();
+
+        document.getElementById('active-name').textContent = chat.name;
+        document.getElementById('active-status').textContent = chat.status;
+        const avatarEl = document.getElementById('active-avatar');
+        avatarEl.className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 ${chat.avatarBg}`;
+        avatarEl.textContent = chat.avatarText;
+
+        document.getElementById('sidebar').classList.add('hidden', 'md:flex');
+        document.getElementById('chat-window').classList.remove('hidden');
+
+        renderMessages();
+        renderChatList();
+      }
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('messages-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      chat.messages.forEach(msg => {
+        const bubble = document.createElement('div');
+        bubble.className = `flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`;
+
+        bubble.innerHTML = `
+          <div class="max-w-[75%] md:max-w-[60%] rounded-2xl px-3.5 py-2 shadow-sm text-sm relative break-words ${
+            msg.fromMe ? 'bg-gradient-to-r from-[#5f27cd] to-[#6c5ce7] text-white rounded-br-xs' : 'bg-tg-bubbleIn text-gray-100 rounded-bl-xs'
+          }">
+            <div class="mb-1 leading-relaxed">${msg.text}</div>
+            <div class="flex items-center justify-end gap-1 text-[10px] text-white/70 font-mono -mb-0.5">
+              <span>${msg.time}</span>
+              ${msg.fromMe ? '<span class="text-teal-300 font-bold">✓✓</span>' : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(bubble);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      chat.messages.push({
+        text: text,
+        fromMe: true,
+        time: timeNow
+      });
+
+      input.value = '';
+      playZapSound('sent');
+      saveChats();
+      renderMessages();
+      renderChatList();
+
+      document.getElementById('emoji-picker').classList.add('hidden');
+      triggerAutoReply(chat, text);
+    }
+
+    function triggerAutoReply(chat, userText) {
+      const typingIndicator = document.getElementById('typing-indicator');
+      document.getElementById('typing-name').textContent = chat.name;
+      typingIndicator.classList.remove('hidden');
+
+      const delay = Math.floor(Math.random() * 1000) + 1200;
+
+      setTimeout(() => {
+        typingIndicator.classList.add('hidden');
+
+        let reply = "Mensagem recebida com prioridade de Fundador ⚡!";
+
+        if (chat.id === 1) {
+          const lower = userText.toLowerCase();
+          if (lower.includes('oi') || lower.includes('olá')) {
+            reply = "Olá, Fundador Oziel! Sua tesouraria de 11 dígitos está intacta com 10.000.000.000 de ZapStars! 👑";
+          } else if (lower.includes('stars') || lower.includes('estrelas') || lower.includes('saldo')) {
+            reply = `Seu saldo atual de Fundador é exatamente ${formatNumber(zapStars)} ZapStars! Você tem poder total para apoiar e emitir moedas. ⭐`;
+          } else {
+            const zapReplies = [
+              "Diretiva de Fundador processada com sucesso!",
+              "O ecossistema ZAPGRAM está rodando com 100% de estabilidade.",
+              "Com 10 bilhões de ZapStars na tesouraria, o ZAPGRAM está pronto para crescer mundialmente! 🚀",
+              "Sempre pronto para suas ordens, Idealizador!"
+            ];
+            reply = zapReplies[Math.floor(Math.random() * zapReplies.length)];
+          }
+        } else if (chat.id === 2) {
+          reply = "Ordens no mercado cripto continuam em alta volatilidade. 📊";
+        } else if (chat.id === 3) {
+          reply = "Lembre-se: 5 minutos de prática diária valem mais que 1 hora no fim de semana! 🦉";
+        }
+
+        const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        chat.messages.push({
+          text: reply,
+          fromMe: false,
+          time: replyTime
+        });
+
+        playZapSound('received');
+        saveChats();
+        renderMessages();
+        renderChatList();
+      }, delay);
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    function handleSearch(val) {
+      renderChatList(val);
+    }
+
+    function filterFolder(folder) {
+      currentFolder = folder;
+      document.querySelectorAll('.folder-tab').forEach(t => {
+        t.className = 'folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap text-tg-muted';
+      });
+      event.target.className = 'folder-tab px-3.5 py-2.5 text-teal-400 border-b-2 border-teal-400 transition whitespace-nowrap font-bold';
+      renderChatList();
+    }
+
+    function toggleEmojiPicker() {
+      document.getElementById('emoji-picker').classList.toggle('hidden');
+    }
+
+    function insertEmoji(emoji) {
+      const input = document.getElementById('message-input');
+      input.value += emoji;
+      input.focus();
+    }
+
+    function sendAttachment() {
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      chat.messages.push({
+        text: '📎 [Arquivo Anexado: documento_zapgram_master.pdf (1.2 MB)]',
+        fromMe: true,
+        time: timeNow
+      });
+      playZapSound('sent');
+      saveChats();
+      renderMessages();
+      renderChatList();
+    }
+
+    function closeChatMobile() {
+      document.getElementById('sidebar').classList.remove('hidden');
+      document.getElementById('chat-window').classList.add('hidden', 'md:flex');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateStarsDisplay();
+    });
+  </script>
+</body>
+</html>
