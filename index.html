@@ -338,7 +338,7 @@
           <span class="text-gray-400 dark:text-tg-muted group-hover:text-gray-900 dark:group-hover:text-white">›</span>
         </button>
 
-        <button onclick="configureGeminiKey()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="openGeminiModal()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">🤖</span>
             <div>
@@ -438,9 +438,66 @@
           </div>
         </div>
 
-        <button onclick="triggerConfetti(); closePremiumModal();" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
+        <button onclick="triggerConfetti(); closePremiumModal();" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-emerald-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
           ✓ Status: Fundador Master Ativo
         </button>
+      </div>
+    </div>
+
+    <!-- ================= MODAL GOOGLE GEMINI AI ================= -->
+    <div id="modal-gemini" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-tg-sidebar border border-gray-200 dark:border-tg-border rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
+        <button onclick="closeGeminiModal()" class="absolute top-4 right-4 p-1.5 rounded-full text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white">
+          ✕
+        </button>
+
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-400 via-cyan-500 to-blue-600 flex items-center justify-center text-3xl shadow-xl shadow-teal-500/30 mb-3 text-white">
+          🤖
+        </div>
+
+        <h2 class="text-xl font-black text-gray-900 dark:text-white mb-1">Cérebro IA Oficial (Google Gemini)</h2>
+        <p class="text-xs text-gray-500 dark:text-tg-muted mb-4">
+          Conecte o motor oficial do Google para respostas reais e completas em qualquer pergunta!
+        </p>
+
+        <!-- Caixa de instruções e link direto -->
+        <div class="bg-teal-50 dark:bg-tg-panel/80 border border-teal-500/30 rounded-2xl p-3.5 text-left mb-4 text-xs space-y-2">
+          <div class="flex items-center gap-2 font-bold text-teal-700 dark:text-teal-400">
+            <span>🔑</span>
+            <span>Como gerar sua chave gratuita em 30 segundos:</span>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300">
+            O Google oferece acesso gratuito e ilimitado para desenvolvedores no <strong>Google AI Studio</strong>:
+          </p>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 text-black font-extrabold text-xs hover:from-teal-400 hover:to-emerald-300 transition w-full justify-center shadow-md">
+            🔗 Abrir aistudio.google.com/app/apikey
+          </a>
+          <ol class="list-decimal list-inside space-y-1 text-gray-600 dark:text-gray-300 text-[11px] pt-1">
+            <li>Faça login com sua conta Google comum.</li>
+            <li>Clique no botão azul <strong>"Create API key"</strong>.</li>
+            <li>Copie o código gerado (começa com <code>AIzaSy...</code>) e cole abaixo:</li>
+          </ol>
+        </div>
+
+        <div class="space-y-2 mb-4 text-left">
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Sua Chave Google Gemini:</label>
+          <input 
+            type="text" 
+            id="gemini-key-input" 
+            placeholder="Cole aqui (ex: AIzaSy...)" 
+            class="w-full bg-gray-100 dark:bg-[#141414] border border-gray-300 dark:border-tg-border rounded-xl px-3 py-2.5 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-teal-400 transition font-mono"
+          >
+          <div id="gemini-status-msg" class="text-xs font-medium hidden"></div>
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="saveAndTestGeminiKey()" id="btn-save-gemini" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-teal-500/25 active:scale-95 transition">
+            ⚡ Salvar &amp; Testar Conexão
+          </button>
+          <button onclick="removeGeminiKey()" title="Limpar chave" class="px-3 py-3 rounded-xl border border-rose-500/40 text-rose-500 hover:bg-rose-500/10 text-xs font-bold transition">
+            Remover
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1178,26 +1235,96 @@
       triggerAutoReply(chat, text);
     }
 
-    // ================= MOTOR DE INTELIGÊNCIA ARTIFICIAL REAL (AI ENGINE) =================
-    function configureGeminiKey() {
+    // ================= CONTROLE DO CÉREBRO DE IA (GOOGLE GEMINI) =================
+    function openGeminiModal() {
       const current = localStorage.getItem('zapgram_gemini_key') || '';
-      const key = prompt(
-        "⚡ CONFIGURAÇÃO DO CÉREBRO DE IA DO ZAPGRAM\n\nO ZAPGRAM já possui uma IA pública gratuita ativa!\nSe quiser usar sua própria chave da Google (Gemini 1.5 Flash), cole-a abaixo (ou deixe em branco para usar a IA gratuita):",
-        current
-      );
-      if (key !== null) {
-        if (key.trim()) {
-          localStorage.setItem('zapgram_gemini_key', key.trim());
-          alert("✅ Chave da Google Gemini salva com sucesso! Os ZapBots agora usam o motor oficial Gemini 1.5 Flash.");
+      document.getElementById('gemini-key-input').value = current;
+      document.getElementById('gemini-status-msg').classList.add('hidden');
+      document.getElementById('modal-gemini').classList.remove('hidden');
+    }
+
+    function closeGeminiModal() {
+      document.getElementById('modal-gemini').classList.add('hidden');
+    }
+
+    function removeGeminiKey() {
+      localStorage.removeItem('zapgram_gemini_key');
+      document.getElementById('gemini-key-input').value = '';
+      const msg = document.getElementById('gemini-status-msg');
+      msg.className = 'text-xs font-bold text-amber-500';
+      msg.textContent = 'Chave removida. O ZAPGRAM voltou para a IA nativa integrada!';
+      msg.classList.remove('hidden');
+      updateAIStatusDisplay();
+    }
+
+    async function saveAndTestGeminiKey() {
+      const input = document.getElementById('gemini-key-input');
+      const msg = document.getElementById('gemini-status-msg');
+      const btn = document.getElementById('btn-save-gemini');
+      const key = input.value.trim();
+
+      if (!key) {
+        msg.className = 'text-xs font-bold text-rose-500';
+        msg.textContent = 'Cole sua chave do Google Gemini acima antes de salvar.';
+        msg.classList.remove('hidden');
+        return;
+      }
+
+      btn.textContent = 'Conectando ao Google Gemini...';
+      btn.disabled = true;
+      msg.className = 'text-xs font-bold text-teal-600 dark:text-teal-400';
+      msg.textContent = 'Validando chave com os servidores oficiais do Google...';
+      msg.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "Responda apenas: 'Conexão confirmada com sucesso!'" }] }]
+          })
+        });
+
+        if (res.ok) {
+          localStorage.setItem('zapgram_gemini_key', key);
+          msg.className = 'text-xs font-bold text-emerald-600 dark:text-emerald-400';
+          msg.textContent = '✅ Chave Oficial Aprovada! Gemini 1.5 Flash está 100% ATIVO em todos os ZapBots!';
+          playZapSound('login');
+          triggerConfetti();
+          updateAIStatusDisplay();
+          setTimeout(() => {
+            closeGeminiModal();
+          }, 1600);
         } else {
-          localStorage.removeItem('zapgram_gemini_key');
-          alert("✅ Configurado para usar a IA pública gratuita (sem limites)!");
+          const err = await res.json();
+          msg.className = 'text-xs font-bold text-rose-500';
+          msg.textContent = '❌ Erro na chave do Google: ' + (err.error?.message || 'Chave inválida. Gere uma nova no Google AI Studio.');
+        }
+      } catch (e) {
+        msg.className = 'text-xs font-bold text-rose-500';
+        msg.textContent = '❌ Erro de conexão com a API do Google: ' + e.message;
+      } finally {
+        btn.textContent = '⚡ Salvar & Testar Conexão';
+        btn.disabled = false;
+      }
+    }
+
+    function updateAIStatusDisplay() {
+      const desc = document.getElementById('ai-engine-desc');
+      const key = localStorage.getItem('zapgram_gemini_key');
+      if (desc) {
+        if (key) {
+          desc.textContent = 'Google Gemini 1.5 Flash Ativo ⭐';
+          desc.className = 'text-xs text-emerald-500 font-bold';
+        } else {
+          desc.textContent = 'IA Nativa / Toque para colocar chave Gemini';
+          desc.className = 'text-xs text-teal-600 dark:text-teal-400 font-medium';
         }
       }
     }
 
     async function queryAI(systemPrompt, userText) {
-      // 1. Chave Gemini Oficial da Google (se configurada)
+      // 1. Chave Gemini Oficial da Google (se configurada pelo usuário)
       const userGeminiKey = localStorage.getItem('zapgram_gemini_key');
       if (userGeminiKey) {
         try {
@@ -1218,29 +1345,7 @@
         }
       }
 
-      // 2. Motor de IA Pública Gratuita (CORS habilitado - sem necessidade de chave)
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 9500);
-
-        const cleanPrompt = encodeURIComponent(userText.slice(0, 500));
-        const cleanSys = encodeURIComponent(systemPrompt.slice(0, 400));
-        const url = `https://text.pollinations.ai/${cleanPrompt}?system=${cleanSys}&model=openai`;
-
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (res.ok) {
-          const aiText = await res.text();
-          if (aiText && aiText.trim() && !aiText.includes('<!DOCTYPE') && !aiText.includes('Error')) {
-            return aiText.trim();
-          }
-        }
-      } catch (err) {
-        console.warn("AI fetch fallback to local engine:", err);
-      }
-
-      // 3. Base de Conhecimento Local Inteligente (Offline Fallback)
+      // 2. Base de Conhecimento Inteligente Nativa
       return getLocalIntelligentAnswer(userText);
     }
 
@@ -1256,22 +1361,43 @@
         } catch (e) {}
       }
 
-      // Conhecimentos Gerais & Perguntas Frequentes
-      if (t.includes('capital da frança') || t.includes('capital de frança')) return "A capital da França é **Paris**, famosa pela Torre Eiffel, Museu do Louvre e gastronomia! 🗼";
-      if (t.includes('capital do brasil')) return "A capital do Brasil é **Brasília**, no Distrito Federal, planejada por Lúcio Costa e com obras de Oscar Niemeyer. 🏛️";
-      if (t.includes('capital dos estados unidos') || t.includes('capital dos eua')) return "A capital dos Estados Unidos é **Washington, D.C.** 🇺🇸";
-      if (t.includes('sistema solar') || t.includes('planetas')) return "O Sistema Solar possui **8 planetas**: Mercúrio, Vênus, Terra, Marte, Júpiter, Saturno, Urano e Netuno. 🪐";
+      // ================= CAPITAIS & GEOGRAFIA =================
+      if (t.includes('capital da frança') || t.includes('capital de frança')) return "A capital da França é **Paris**, uma das cidades mais influentes do mundo na cultura, moda, gastronomia e arte! Famosa pela Torre Eiffel, Museu do Louvre e Rio Sena. 🗼";
+      if (t.includes('capital do brasil')) return "A capital do Brasil é **Brasília**, no Distrito Federal, planejada pelo urbanista Lúcio Costa com arquitetura icônica de Oscar Niemeyer. Inaugurada em 1960! 🏛️";
+      if (t.includes('capital dos estados unidos') || t.includes('capital dos eua')) return "A capital dos Estados Unidos é **Washington, D.C.** (Distrito de Columbia), onde ficam a Casa Branca, o Capitólio e a Suprema Corte. 🇺🇸";
+      if (t.includes('capital da itália') || t.includes('capital de itália')) return "A capital da Itália é **Roma**, cidade milenar rica em história, lar do Coliseu, Fórum Romano e com a Cidade do Vaticano em seu interior. 🏛️🇮🇹";
+      if (t.includes('capital da espanha')) return "A capital da Espanha é **Madri**, centro cultural e financeiro do país, famosa pelo Museu do Prado e pelo Palácio Real. 🇪🇸";
+      if (t.includes('capital de portugal') || t.includes('capital da portugal')) return "A capital de Portugal é **Lisboa**, cidade litorânea conhecida por seus bondes amarelos, Torre de Belém e rica história marítima. 🇵🇹";
+      if (t.includes('capital do japão') || t.includes('capital de japão')) return "A capital do Japão é **Tóquio**, a metrópole mais populosa do planeta, pioneira em tecnologia avançada e cultura milenar. 🇯🇵";
+      if (t.includes('capital da argentina')) return "A capital da Argentina é **Buenos Aires**, famosa pelo tango, arquitetura europeia e o Teatro Colón. 🇦🇷";
+
+      // ================= CIÊNCIA & ESPAÇO =================
+      if (t.includes('sistema solar') || t.includes('planetas')) return "O Sistema Solar possui **8 planetas** oficiais: Mercúrio, Vênus, Terra, Marte, Júpiter, Saturno, Urano e Netuno. O maior deles é Júpiter e o mais próximo do Sol é Mercúrio. 🪐";
+      if (t.includes('distância da terra até a lua') || t.includes('distancia da terra a lua')) return "A distância média da Terra até a Lua é de cerca de **384.400 quilômetros**. A luz leva aproximadamente 1,3 segundos para viajar essa distância! 🌕🚀";
+      if (t.includes('velocidade da luz')) return "A velocidade da luz no vácuo é de exatamente **299.792.458 metros por segundo** (aproximadamente 300.000 km/s). É o limite máximo de velocidade do Universo! ⚡";
+      if (t.includes('fotossíntese')) return "A **fotossíntese** é o processo pelo qual plantas e algas convertem luz solar, gás carbônico (CO₂) e água em glicose (energia) e liberam oxigênio (O₂) vital para a atmosfera terrestre. 🌿☀️";
+      if (t.includes('buraco negro')) return "Um **buraco negro** é uma região do espaço-tempo onde a gravidade é tão intensa que nada — nem mesmo a luz — consegue escapar após ultrapassar o chamado horizonte de eventos. 🕳️🌌";
+
+      // ================= CULINÁRIA & RECEITAS =================
+      if (t.includes('bolo de chocolate')) return "🍫 **Bolo de Chocolate Fácil:**\n1. Bata 3 ovos, 1 xícara de açúcar, 1 xícara de chocolate em pó e 1/2 xícara de óleo.\n2. Junte 2 xícaras de farinha de trigo e 1 xícara de água fervente.\n3. Misture 1 colher de fermento.\n4. Asse a 180°C por 35-40 min!";
+      if (t.includes('como fazer bolo') || t.includes('bolo simples')) return "🍰 **Bolo Caseiro Fofinho:**\n1. Bata 3 ovos com 2 xícaras de açúcar e 3 colheres de manteiga.\n2. Misture 3 xícaras de farinha de trigo e 1 xícara de leite morno.\n3. Finalize com 1 colher de fermento em pó.\n4. Asse a 180°C por 40 minutos!";
+      if (t.includes('como fazer café') || t.includes('café perfeito')) return "☕ **Café Perfeito:**\n1. Aqueça a água até quase ferver (cerca de 90°C a 92°C).\n2. Use a proporção de 1 colher de sopa de pó para cada 100ml de água.\n3. Despeje a água em círculos no filtro e não mexa com colher!";
+
+      // ================= TECNOLOGIA & ZAPGRAM =================
       if (t.includes('quem é você') || t.includes('quem e voce') || t.includes('o que você faz')) return "Sou o **ZAPGRAM Assistant**, inteligência artificial oficial criada para apoiar você e o Fundador **Oziel Leite**! Posso tirar dúvidas, fazer cálculos, traduzir textos e explicar qualquer assunto. ⚡";
       if (t.includes('quem é o fundador') || t.includes('quem criou') || t.includes('quem e o fundador')) return "O **ZAPGRAM** foi idealizado e fundado por **Oziel Leite**, que detém o status master `👑 FUNDADOR` e tesouro de 10 bilhões de ZapStars! 👑⭐";
       if (t.includes('o que é inteligência artificial') || t.includes('o que é ia')) return "A **Inteligência Artificial (IA)** é a capacidade de softwares simularem raciocínio humano, processamento de linguagem, aprendizado contínuo e resolução de problemas complexos. 🤖";
       if (t.includes('o que é bitcoin') || t.includes('o que é btc')) return "O **Bitcoin (BTC)** é a principal criptomoeda descentralizada do mundo, lançada em 2008 por Satoshi Nakamoto para permitir transações financeiras seguras sem bancos intermediários. ₿";
-      if (t.includes('piada')) return "Por que o livro de matemática se suicidou? Porque tinha muitos problemas! 😂📚";
+      if (t.includes('o que é blockchain')) return "A **Blockchain** é um livro de registro digital distribuído e imutável. Cada bloco armazena transações criptografadas ligadas ao bloco anterior, garantindo segurança sem autoridade central. ⛓️";
+
+      // ================= CURIOSIDADES & DIA A DIA =================
+      if (t.includes('piada')) return "Por que os elétrons nunca são convidados para festas? Porque eles são muito negativos! 😂⚡";
       if (t.includes('conselho') || t.includes('dica')) return "💡 **Conselho de ouro:** A consistência diária de 20 minutos constrói impérios muito mais rápido do que picos esporádicos de esforço!";
-      if (t.includes('como fazer bolo')) return "🍰 **Bolo Caseiro Fofinho:**\n1. Bata 3 ovos com 2 xícaras de açúcar e 3 colheres de manteiga.\n2. Misture 3 xícaras de farinha de trigo e 1 xícara de leite morno.\n3. Finalize com 1 colher de fermento em pó.\n4. Asse a 180°C por 40 minutos!";
       if (t.includes('como você está') || t.includes('tudo bem') || t.includes('tudo bom')) return "Estou excelente e 100% pronto para suas ordens, Fundador Oziel! Em que posso te ajudar hoje? ⚡";
       if (t.includes('obrigado') || t.includes('valeu') || t.includes('grato')) return "Por nada, Oziel! Sempre que precisar, é só me mandar uma mensagem! 🚀";
 
-      return `Entendido, Oziel! Analisei sua pergunta sobre **"${text}"**. Como IA oficial do ZAPGRAM, posso ajudá-lo a desenvolver qualquer tema, responder dúvidas científicas, programar ou aprimorar seu aplicativo! Digite **/ajuda** para ver os atalhos disponíveis. 💡`;
+      // Resposta inteligente abrangente para qualquer outra pergunta
+      return `Olá, Oziel! Analisei sua pergunta sobre **"${text}"**.\n\nPara ter respostas completas com páginas de explicações detalhadas, você pode conectar a chave gratuita do **Google Gemini 1.5 Flash** clicando no menu lateral ☰ > **Cérebro dos ZapBots (IA)**!\n\n💡 Se precisar de cálculos, capitais, ciência, receitas ou ajuda com o ZAPGRAM, pode me perguntar diretamente aqui! ⚡`;
     }
 
     async function triggerAutoReply(chat, userText) {
@@ -1419,6 +1545,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       applyTheme();
       updateStarsDisplay();
+      updateAIStatusDisplay();
     });
   </script>
 </body>
