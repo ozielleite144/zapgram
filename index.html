@@ -297,16 +297,19 @@
         </div>
         <div class="text-xs text-teal-600 dark:text-teal-400 font-bold font-mono">Idealizador &amp; CEO • @ozielleite</div>
         
-        <!-- Saldo ZapStars de 11 DÍGITOS -->
-        <div class="mt-3.5 py-2 px-3 rounded-2xl bg-gradient-to-r from-yellow-500/15 via-amber-500/20 to-transparent border border-yellow-500/40 shadow-sm flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <span class="text-yellow-500 dark:text-yellow-400 text-xl premium-star">⭐</span>
-            <div>
-              <div class="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400/90 tracking-widest">Tesouro do Fundador</div>
-              <div class="text-xs font-bold text-gray-800 dark:text-white">ZapStars (11 Dígitos)</div>
+        <!-- Saldo ZapStars de 20 DÍGITOS -->
+        <div class="mt-3.5 py-2 px-3 rounded-2xl bg-gradient-to-r from-yellow-500/15 via-amber-500/20 to-transparent border border-yellow-500/40 shadow-sm flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-yellow-500 dark:text-yellow-400 text-lg premium-star">⭐</span>
+              <div>
+                <div class="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400/90 tracking-widest">Tesouro do Fundador</div>
+                <div class="text-xs font-bold text-gray-800 dark:text-white">ZapStars (20 Dígitos)</div>
+              </div>
             </div>
+            <span class="text-[10px] bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 font-black px-2 py-0.5 rounded-full border border-yellow-400/30">10 QUINTILHÕES</span>
           </div>
-          <span id="zapstars-balance" class="text-sm font-black font-mono text-yellow-600 dark:text-yellow-400 tracking-tight">10.000.000.000 ⭐</span>
+          <span id="zapstars-balance" class="text-xs font-black font-mono text-yellow-600 dark:text-yellow-400 tracking-tight text-right select-all">10.000.000.000.000.000.000 ⭐</span>
         </div>
       </div>
 
@@ -424,8 +427,8 @@
           <div class="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-tg-panel/60 border border-gray-200 dark:border-tg-border">
             <span class="text-lg">⚡</span>
             <div>
-              <div class="font-bold text-gray-900 dark:text-white">Tesouraria de 11 Dígitos</div>
-              <div class="text-gray-500 dark:text-tg-muted">10.000.000.000 de ZapStars disponíveis para emitir ou apoiar.</div>
+              <div class="font-bold text-gray-900 dark:text-white">Tesouraria de 20 Dígitos (10 Quintilhões)</div>
+              <div class="text-gray-500 dark:text-tg-muted">10.000.000.000.000.000.000 de ZapStars disponíveis para emitir ou apoiar.</div>
             </div>
           </div>
 
@@ -529,9 +532,9 @@
             <span id="header-theme-icon" class="text-base">🌙</span>
           </button>
 
-          <button onclick="toggleMenuDrawer()" title="Conta do Fundador (10B ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-600 dark:text-yellow-400 border border-yellow-400/40 flex items-center gap-1 text-xs font-black transition">
+          <button onclick="toggleMenuDrawer()" title="Conta do Fundador (20 Dígitos - 10 Quintilhões ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-600 dark:text-yellow-400 border border-yellow-400/40 flex items-center gap-1 text-xs font-black transition">
             <span>👑</span>
-            <span>10B ⭐</span>
+            <span id="header-stars-badge">20D ⭐</span>
           </button>
         </div>
       </div>
@@ -834,33 +837,46 @@
       playZapSound('sent');
     }
 
-    // ================= ESTADO DE MONETIZAÇÃO DO FUNDADOR (11 DÍGITOS) =================
-    const FOUNDER_STARS = 10000000000;
-    let zapStars = parseInt(localStorage.getItem('zapgram_stars')) || FOUNDER_STARS;
+    // ================= ESTADO DE MONETIZAÇÃO DO FUNDADOR (20 DÍGITOS) =================
+    // 20 dígitos exatos: 10.000.000.000.000.000.000 ⭐ (10 Quintilhões)
+    const FOUNDER_STARS_STR = "10000000000000000000";
+    let zapStars;
+    try {
+      const stored = localStorage.getItem('zapgram_stars_20');
+      zapStars = stored ? BigInt(stored) : BigInt(FOUNDER_STARS_STR);
+    } catch(e) {
+      zapStars = BigInt(FOUNDER_STARS_STR);
+    }
 
-    if (zapStars < FOUNDER_STARS) {
-      zapStars = FOUNDER_STARS;
-      localStorage.setItem('zapgram_stars', zapStars.toString());
+    if (zapStars < BigInt(FOUNDER_STARS_STR)) {
+      zapStars = BigInt(FOUNDER_STARS_STR);
+      localStorage.setItem('zapgram_stars_20', zapStars.toString());
     }
 
     function formatNumber(num) {
-      return num.toLocaleString('pt-BR');
+      try {
+        return BigInt(num).toLocaleString('pt-BR');
+      } catch (e) {
+        return num.toString();
+      }
     }
 
     function updateStarsDisplay() {
       const el = document.getElementById('zapstars-balance');
       if (el) el.textContent = formatNumber(zapStars) + ' ⭐';
+      const badge = document.getElementById('header-stars-badge');
+      if (badge) badge.textContent = '20D ⭐';
     }
 
     function sendFounderTip() {
-      const tipAmount = 10000;
+      const tipAmount = 10000n;
       if (zapStars >= tipAmount) {
         zapStars -= tipAmount;
-        localStorage.setItem('zapgram_stars', zapStars.toString());
+        localStorage.setItem('zapgram_stars_20', zapStars.toString());
         updateStarsDisplay();
         playZapSound('premium');
         triggerConfetti();
-        alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars para o canal! 🎉\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐.`);
+        alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars da sua Tesouraria! 🎉\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐ (20 dígitos).`);
       }
     }
 
@@ -1385,7 +1401,7 @@
 
       // ================= TECNOLOGIA & ZAPGRAM =================
       if (t.includes('quem é você') || t.includes('quem e voce') || t.includes('o que você faz')) return "Sou o **ZAPGRAM Assistant**, inteligência artificial oficial criada para apoiar você e o Fundador **Oziel Leite**! Posso tirar dúvidas, fazer cálculos, traduzir textos e explicar qualquer assunto. ⚡";
-      if (t.includes('quem é o fundador') || t.includes('quem criou') || t.includes('quem e o fundador')) return "O **ZAPGRAM** foi idealizado e fundado por **Oziel Leite**, que detém o status master `👑 FUNDADOR` e tesouro de 10 bilhões de ZapStars! 👑⭐";
+      if (t.includes('quem é o fundador') || t.includes('quem criou') || t.includes('quem e o fundador')) return "O **ZAPGRAM** foi idealizado e fundado por **Oziel Leite**, que detém o status master `👑 FUNDADOR` e tesouro de 20 dígitos (10 Quintilhões de ZapStars)! 👑⭐";
       if (t.includes('o que é inteligência artificial') || t.includes('o que é ia')) return "A **Inteligência Artificial (IA)** é a capacidade de softwares simularem raciocínio humano, processamento de linguagem, aprendizado contínuo e resolução de problemas complexos. 🤖";
       if (t.includes('o que é bitcoin') || t.includes('o que é btc')) return "O **Bitcoin (BTC)** é a principal criptomoeda descentralizada do mundo, lançada em 2008 por Satoshi Nakamoto para permitir transações financeiras seguras sem bancos intermediários. ₿";
       if (t.includes('o que é blockchain')) return "A **Blockchain** é um livro de registro digital distribuído e imutável. Cada bloco armazena transações criptografadas ligadas ao bloco anterior, garantindo segurança sem autoridade central. ⛓️";
@@ -1411,9 +1427,9 @@
       // ================= ATALHOS / COMANDOS RÁPIDOS =================
       if (chat.id === 1) { // ZAPGRAM Assistant
         if (lower.startsWith('/saldo') || lower === 'saldo' || lower === 'meu saldo') {
-          reply = `⭐ **Saldo da Tesouraria:** Você possui atualmente **${formatNumber(zapStars)} ZapStars** (11 dígitos)! Você tem poderes ilimitados de emissão e apoio.`;
+          reply = `⭐ **Saldo da Tesouraria:** Você possui atualmente **${formatNumber(zapStars)} ZapStars** (20 dígitos - 10 Quintilhões)! Você tem poderes ilimitados de emissão e apoio.`;
         } else if (lower.startsWith('/ajuda') || lower.startsWith('/help') || lower === 'ajuda' || lower === 'comandos') {
-          reply = `💡 **Comandos do ZAPGRAM Assistant:**\n• ⭐ **/saldo** - Ver saldo de 11 dígitos da tesouraria\n• 👑 **/fundador** - Detalhes da conta master de Oziel Leite\n• 🎉 **/doar** - Doar 10.000 ZapStars com confetes\n• 🎨 **/logo** - Conhecer a história do ícone híbrido\n• 🌙 **/tema** - Alternar modo escuro e claro\n• 🤖 **Perguntas Livres** - Pode me perguntar QUALQUER COISA: ciência, história, receitas, conselhos ou tecnologia!`;
+          reply = `💡 **Comandos do ZAPGRAM Assistant:**\n• ⭐ **/saldo** - Ver saldo de 20 dígitos (10 Quintilhões ⭐)\n• 👑 **/fundador** - Detalhes da conta master de Oziel Leite\n• 🎉 **/doar** - Doar 10.000 ZapStars com confetes\n• 🎨 **/logo** - Conhecer a história do ícone híbrido\n• 🌙 **/tema** - Alternar modo escuro e claro\n• 🤖 **Perguntas Livres** - Pode me perguntar QUALQUER COISA: ciência, história, receitas, conselhos ou tecnologia!`;
         } else if (lower.startsWith('/fundador')) {
           reply = `👑 **Credenciais do Fundador:**\n• **Idealizador:** Oziel Leite\n• **Cargo:** CEO & Arquiteto Master do ZAPGRAM\n• **Selo:** VIP Estrela de Ouro Vitalícia ⭐\n• **Permissão:** Isenção total de anúncios e faturamento de 50% dos canais!`;
         } else if (lower.startsWith('/doar')) {
