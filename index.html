@@ -43,14 +43,27 @@
   </script>
 
   <style>
-    /* Wallpaper pontilhado clássico do ZAPGRAM */
-    .zapgram-wallpaper {
-      background-color: #0d1117;
-      background-image: radial-gradient(#1f2937 1px, transparent 1px);
-      background-size: 20px 20px;
+    /* Papel de Parede Estilo Telegram com Doodles Sutis */
+    .dark .zapgram-wallpaper {
+      background-color: #0b1118;
+      background-image: 
+        radial-gradient(#1e293b 1px, transparent 1px),
+        url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2300d2d3' fill-opacity='0.035' fill-rule='evenodd'%3E%3Cpath d='M11 11h2v2h-2zm20 20h2v2h-2zm-20 20h2v2h-2zm40-40h2v2h-2zm0 40h2v2h-2zM45 45l8-4-8-4v3H35v2h10v3zm-30 0l-4 8 8-4h-3v-10h-2v10h1zM65 15a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm-50 45a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'/%3E%3C/g%3E%3C/svg%3E");
     }
 
-    /* Linha de Scanner do QR Code */
+    html:not(.dark) .zapgram-wallpaper {
+      background-color: #e4ecf2;
+      background-image: 
+        radial-gradient(#cbd5e1 1px, transparent 1px),
+        url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%230284c7' fill-opacity='0.06' fill-rule='evenodd'%3E%3Cpath d='M11 11h2v2h-2zm20 20h2v2h-2zm-20 20h2v2h-2zm40-40h2v2h-2zm0 40h2v2h-2zM45 45l8-4-8-4v3H35v2h10v3zm-30 0l-4 8 8-4h-3v-10h-2v10h1zM65 15a5 5 0 1 1-10 0 5 5 0 0 1 10 0zm-50 45a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Brilho Neon Ambiente na Tela de Login */
+    .glow-aura {
+      box-shadow: 0 0 50px -10px rgba(0, 210, 211, 0.35);
+    }
+
+    /* Scanner do QR Code */
     @keyframes scanAnimation {
       0% { top: 4px; opacity: 0.8; }
       50% { top: 92%; opacity: 1; }
@@ -61,16 +74,16 @@
       left: 6px;
       right: 6px;
       height: 3px;
-      background: linear-gradient(90deg, transparent, #00d2d3, #10b981, transparent);
-      box-shadow: 0 0 12px #00d2d3;
+      background: linear-gradient(90deg, transparent, #00d2d3, #25D366, transparent);
+      box-shadow: 0 0 15px #00d2d3;
       border-radius: 4px;
-      animation: scanAnimation 2.8s ease-in-out infinite;
+      animation: scanAnimation 2.6s ease-in-out infinite;
     }
 
-    /* Efeito de brilho da Estrela Premium */
+    /* Animação de pulso da Estrela Dourada */
     @keyframes starPulse {
       0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #ffc107); }
-      50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #ffc107); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 10px #ffc107); }
     }
     .premium-star {
       display: inline-block;
@@ -92,7 +105,7 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
-    /* Pontos de "digitando..." animados */
+    /* Digitando... animado */
     @keyframes typingDot {
       0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
       40% { transform: translateY(-4px); opacity: 1; }
@@ -102,25 +115,69 @@
     .dot-3 { animation: typingDot 1.2s infinite ease-in-out 0.4s; }
   </style>
 </head>
-<body class="bg-tg-bg text-white font-sans h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-tg-bg dark:bg-tg-bg text-gray-900 dark:text-white font-sans h-screen flex flex-col overflow-hidden select-none transition-colors duration-200">
+
+  <!-- SVG Global Definitions para o Ícone Híbrido (Balão Azul WhatsApp + Avião Verde Telegram) -->
+  <svg class="hidden" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Balão do WhatsApp (AZUL TELEGRAM) -->
+      <linearGradient id="zapgramBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00d2d3" />
+        <stop offset="45%" stop-color="#229ED9" />
+        <stop offset="100%" stop-color="#0284c7" />
+      </linearGradient>
+      <!-- Avião de Papel do Telegram (VERDE WHATSAPP) -->
+      <linearGradient id="zapgramGreenMain" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#25D366" />
+        <stop offset="100%" stop-color="#10b981" />
+      </linearGradient>
+      <linearGradient id="zapgramGreenDark" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#128C7E" />
+        <stop offset="100%" stop-color="#047857" />
+      </linearGradient>
+
+      <!-- Ícone Híbrido Reutilizável: Balão Azul + Aviãozinho Verde -->
+      <g id="zapgram-hybrid-icon">
+        <!-- Balão do WhatsApp em Azul -->
+        <path d="M 50 11 C 27.5 11 9 29 9 50.5 C 9 58.2 11.3 65.5 15.3 71.7 L 10 90 L 29 85 C 35.1 88.6 42.3 90.6 50 90.6 C 72.5 90.6 91 72.6 91 50.5 C 91 29 72.5 11 50 11 Z" fill="url(#zapgramBlueGrad)" />
+        <!-- Aviãozinho de Papel do Telegram em Verde WhatsApp (Ajustado ao tamanho interno) -->
+        <g transform="translate(3, 1)">
+          <!-- Asa Superior Direita -->
+          <path d="M 29 48 L 73 29 L 58 72 L 47 57 Z" fill="url(#zapgramGreenMain)" />
+          <!-- Dobra Inferior de Sombra 3D -->
+          <path d="M 47 57 L 54 67 L 58 72 L 52 54 Z" fill="url(#zapgramGreenDark)" />
+          <!-- Asa Dobrada Superior -->
+          <path d="M 73 29 L 47 57 L 41 53 Z" fill="#34d399" />
+        </g>
+      </g>
+    </defs>
+  </svg>
+
+  <!-- Canvas Invisível para Efeito de Chuva de Confetes 🎉 -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-[100]"></canvas>
 
   <!-- ================= TELA DE LOGIN POR QR CODE (ZAPGRAM) ================= -->
-  <div id="screen-login" class="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#0f0f0f] relative z-50">
-    <div class="max-w-md w-full flex flex-col items-center text-center">
+  <div id="screen-login" class="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#0a0d14] relative z-50">
+    
+    <div class="absolute w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full flex flex-col items-center text-center relative z-10">
       
-      <!-- Logo Oficial ZAPGRAM com Raio -->
-      <div class="flex items-center gap-3 mb-6">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-teal-500/30">
-          ⚡
+      <!-- Logo Híbrido Oficial ZAPGRAM (Balão Azul WhatsApp + Aviãozinho Verde Telegram) -->
+      <div class="flex items-center gap-3.5 mb-6">
+        <div class="w-16 h-16 drop-shadow-[0_10px_20px_rgba(34,158,217,0.35)] flex items-center justify-center">
+          <svg class="w-full h-full" viewBox="0 0 100 100">
+            <use href="#zapgram-hybrid-icon" />
+          </svg>
         </div>
         <div class="text-left">
           <span class="font-black text-3xl tracking-wider text-white">ZAP<span class="text-teal-400">GRAM</span></span>
-          <span class="block text-[10px] uppercase font-bold tracking-widest text-tg-muted">WEB MESSENGER & BUSINESS</span>
+          <span class="block text-[10px] uppercase font-bold tracking-widest text-teal-400/90">O HÍBRIDO DEFINITIVO</span>
         </div>
       </div>
 
-      <!-- QR Code Interativo do ZAPGRAM -->
-      <div onclick="performLogin()" class="relative p-4 bg-white rounded-3xl shadow-2xl shadow-teal-500/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200" title="Clique para escanear e entrar automaticamente">
+      <!-- QR Code Interativo do ZAPGRAM com o Logo Híbrido no Centro -->
+      <div onclick="performLogin()" class="relative p-4 bg-white rounded-3xl shadow-2xl glow-aura cursor-pointer group hover:scale-[1.02] transition-transform duration-200" title="Clique para escanear e entrar automaticamente">
         <div id="qr-scan-line" class="scan-line"></div>
 
         <svg class="w-56 h-56" viewBox="0 0 100 100" fill="none">
@@ -159,9 +216,11 @@
           <rect x="78" y="72" width="12" height="6" fill="#111827" />
           <rect x="80" y="84" width="12" height="6" fill="#111827" />
 
-          <circle cx="50" cy="50" r="14" fill="white" />
-          <circle cx="50" cy="50" r="12" fill="#00d2d3" />
-          <path d="M 52,41 L 43,51 L 49,51 L 47,59 L 57,48 L 51,48 Z" fill="white" />
+          <!-- Centro do QR Code com o Ícone Híbrido ZapGram -->
+          <circle cx="50" cy="50" r="15" fill="white" />
+          <g transform="translate(38, 38) scale(0.24)">
+            <use href="#zapgram-hybrid-icon" />
+          </g>
         </svg>
 
         <div id="qr-success-overlay" class="hidden absolute inset-0 bg-white/95 rounded-3xl flex flex-col items-center justify-center gap-2">
@@ -176,7 +235,7 @@
         Entrar no <span class="text-teal-400">ZAPGRAM</span> por QR Code
       </h1>
 
-      <ol class="text-left text-sm text-tg-muted space-y-2 mb-8 max-w-sm">
+      <ol class="text-left text-sm text-gray-400 space-y-2 mb-8 max-w-sm">
         <li class="flex items-start gap-2.5">
           <span class="font-bold text-teal-400">1.</span>
           <span>Abra o <strong>ZAPGRAM</strong> no seu celular</span>
@@ -192,7 +251,7 @@
       </ol>
 
       <div class="flex flex-col gap-3 w-full">
-        <button onclick="performLogin()" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-teal-500/20 active:scale-[0.98] transition">
+        <button onclick="performLogin()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-teal-500/25 active:scale-[0.98] transition">
           ⚡ Escanear e Conectar como Fundador
         </button>
 
@@ -207,17 +266,22 @@
   <!-- ================= TELA PRINCIPAL DO APP DE CHAT ================= -->
   <div id="screen-app" class="hidden flex-1 flex h-screen overflow-hidden relative">
     
-    <!-- ================= DRAWER MENU LATERAL (ESTILO TELEGRAM / MONETIZAÇÃO) ================= -->
+    <!-- ================= DRAWER MENU LATERAL ================= -->
     <div id="menu-drawer-backdrop" onclick="toggleMenuDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity"></div>
-    <div id="menu-drawer" class="fixed top-0 left-0 bottom-0 w-80 bg-tg-sidebar border-r border-tg-border z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between">
+    <div id="menu-drawer" class="fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-tg-sidebar border-r border-gray-200 dark:border-tg-border z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between shadow-2xl">
       
       <!-- Topo do Perfil do Fundador -->
-      <div class="p-5 bg-gradient-to-b from-[#182a38] to-tg-sidebar border-b border-tg-border">
+      <div class="p-5 bg-gradient-to-b from-teal-50 to-white dark:from-[#182a38] dark:to-tg-sidebar border-b border-gray-200 dark:border-tg-border">
         <div class="flex items-center justify-between mb-3">
-          <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 via-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-teal-500/20 ring-2 ring-yellow-400">
-            OZ
+          <!-- Avatar 3D com Coroa Dourada -->
+          <div class="relative">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500 flex items-center justify-center text-3xl shadow-xl shadow-yellow-500/30 ring-4 ring-yellow-400/40">
+              👑
+            </div>
+            <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white dark:border-tg-sidebar rounded-full flex items-center justify-center text-[10px] text-white font-bold">✓</span>
           </div>
-          <button onclick="toggleMenuDrawer()" class="p-1 rounded-full text-tg-muted hover:text-white">
+
+          <button onclick="toggleMenuDrawer()" class="p-1.5 rounded-full text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -225,86 +289,106 @@
         </div>
         
         <div class="flex items-center gap-2 mb-0.5">
-          <h3 class="font-black text-base text-white">Oziel Leite</h3>
+          <h3 class="font-black text-base text-gray-900 dark:text-white">Oziel Leite</h3>
           <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-black shadow-sm flex items-center gap-1">
             👑 FUNDADOR
           </span>
           <span id="user-premium-badge" class="text-sm font-bold text-yellow-400 premium-star" title="Membro ZAPGRAM VIP">⭐</span>
         </div>
-        <div class="text-xs text-teal-400 font-bold font-mono">Idealizador &amp; CEO • @ozielleite</div>
+        <div class="text-xs text-teal-600 dark:text-teal-400 font-bold font-mono">Idealizador &amp; CEO • @ozielleite</div>
         
-        <!-- Saldo ZapStars de 11 DÍGITOS (Tesouraria do Fundador) -->
+        <!-- Saldo ZapStars de 11 DÍGITOS -->
         <div class="mt-3.5 py-2 px-3 rounded-2xl bg-gradient-to-r from-yellow-500/15 via-amber-500/20 to-transparent border border-yellow-500/40 shadow-sm flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <span class="text-yellow-400 text-xl premium-star">⭐</span>
+            <span class="text-yellow-500 dark:text-yellow-400 text-xl premium-star">⭐</span>
             <div>
-              <div class="text-[9px] uppercase font-black text-yellow-400/90 tracking-widest">Tesouro do Fundador</div>
-              <div class="text-xs font-bold text-white">ZapStars (11 Dígitos)</div>
+              <div class="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400/90 tracking-widest">Tesouro do Fundador</div>
+              <div class="text-xs font-bold text-gray-800 dark:text-white">ZapStars (11 Dígitos)</div>
             </div>
           </div>
-          <span id="zapstars-balance" class="text-sm font-black font-mono text-yellow-400 tracking-tight">10.000.000.000 ⭐</span>
+          <span id="zapstars-balance" class="text-sm font-black font-mono text-yellow-600 dark:text-yellow-400 tracking-tight">10.000.000.000 ⭐</span>
         </div>
       </div>
 
-      <!-- Links de Monetização & Recursos -->
-      <div class="flex-1 overflow-y-auto p-3 space-y-1 text-sm font-medium">
+      <!-- Links de Recursos & Troca de Tema -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-1.5 text-sm font-medium">
         
-        <!-- 1. ZAPGRAM Premium Vitalício -->
-        <button onclick="openPremiumModal()" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="toggleTheme()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span id="theme-btn-icon" class="text-xl">🌙</span>
+            <div>
+              <div class="font-bold text-gray-900 dark:text-white">Alternar Modo Noturno</div>
+              <div id="theme-btn-desc" class="text-xs text-gray-500 dark:text-tg-muted">Ativar tema claro ou escuro</div>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-tg-panel font-bold text-gray-700 dark:text-gray-300">Trocar</span>
+        </button>
+
+        <button onclick="openPremiumModal()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">⭐</span>
             <div>
-              <div class="font-bold text-white group-hover:text-yellow-400 transition flex items-center gap-1.5">
+              <div class="font-bold text-gray-900 dark:text-white group-hover:text-yellow-500 dark:group-hover:text-yellow-400 transition flex items-center gap-1.5">
                 ZAPGRAM Premium
                 <span class="text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black uppercase">VITALÍCIO</span>
               </div>
-              <div class="text-xs text-tg-muted">Plano Master liberado para o Fundador</div>
+              <div class="text-xs text-gray-500 dark:text-tg-muted">Plano Master liberado para o Fundador</div>
             </div>
           </div>
-          <span class="text-tg-muted group-hover:text-white">›</span>
+          <span class="text-gray-400 dark:text-tg-muted group-hover:text-gray-900 dark:group-hover:text-white">›</span>
         </button>
 
-        <!-- 2. ZapGram Ads & Monetização de Canais -->
-        <button onclick="alert('📢 Painel ZAPGRAM Ads: Como fundador, você tem acesso aos relatórios de faturamento total de todos os anúncios veiculados na rede!')" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="configureGeminiKey()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span class="text-xl">🤖</span>
+            <div>
+              <div class="font-bold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition flex items-center gap-1.5">
+                Cérebro dos ZapBots (IA)
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded font-black uppercase">ONLINE</span>
+              </div>
+              <div id="ai-engine-desc" class="text-xs text-teal-600 dark:text-teal-400">IA Inteligente Ativa (Gemini / LLM)</div>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-1 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/30">Config</span>
+        </button>
+
+        <button onclick="alert('📢 Painel ZAPGRAM Ads: Como fundador, você tem acesso aos relatórios de faturamento total de todos os anúncios veiculados na rede!')" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">📢</span>
             <div>
-              <div class="font-bold text-white group-hover:text-teal-400 transition">ZAPGRAM Ads & Canais</div>
-              <div class="text-xs text-tg-muted">Gestão de faturamento global de anúncios</div>
+              <div class="font-bold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition">ZAPGRAM Ads & Canais</div>
+              <div class="text-xs text-gray-500 dark:text-tg-muted">Gestão de faturamento global de anúncios</div>
             </div>
           </div>
-          <span class="text-tg-muted group-hover:text-white">›</span>
+          <span class="text-gray-400 dark:text-tg-muted">›</span>
         </button>
 
-        <!-- 3. ZAPGRAM Business -->
-        <button onclick="alert('🏢 ZAPGRAM Business: Ferramentas corporativas com chatbots de vendas e catálogo integrado.')" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="alert('🏢 ZAPGRAM Business: Ferramentas corporativas com chatbots de vendas e catálogo integrado.')" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">💼</span>
             <div>
-              <div class="font-bold text-white group-hover:text-teal-400 transition">ZAPGRAM Business</div>
-              <div class="text-xs text-tg-muted">Respostas automáticas para empresas</div>
+              <div class="font-bold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition">ZAPGRAM Business</div>
+              <div class="text-xs text-gray-500 dark:text-tg-muted">Respostas automáticas para empresas</div>
             </div>
           </div>
-          <span class="text-tg-muted group-hover:text-white">›</span>
+          <span class="text-gray-400 dark:text-tg-muted">›</span>
         </button>
 
-        <!-- 4. Mercado de @Usernames Raros -->
-        <button onclick="alert('🏷️ Mercado Fragment ZAPGRAM: Como Idealizador, você possui a custódia de todos os @nomes raros e pode leiloá-los!')" class="w-full p-3 rounded-xl hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="alert('🏷️ Mercado Fragment ZAPGRAM: Como Idealizador, você possui a custódia de todos os @nomes raros e pode leiloá-los!')" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">🏷️</span>
             <div>
-              <div class="font-bold text-white group-hover:text-teal-400 transition">Mercado de @Usernames</div>
-              <div class="text-xs text-tg-muted">Custódia e leilão de nomes colecionáveis</div>
+              <div class="font-bold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition">Mercado de @Usernames</div>
+              <div class="text-xs text-gray-500 dark:text-tg-muted">Custódia e leilão de nomes colecionáveis</div>
             </div>
           </div>
-          <span class="text-tg-muted group-hover:text-white">›</span>
+          <span class="text-gray-400 dark:text-tg-muted">›</span>
         </button>
 
       </div>
 
-      <!-- Rodapé do Menu com Logout -->
-      <div class="p-3 border-t border-tg-border bg-tg-panel/40">
-        <button onclick="performLogout()" class="w-full p-2.5 rounded-xl text-rose-400 hover:bg-rose-500/10 font-bold flex items-center justify-center gap-2 text-sm transition">
+      <div class="p-3 border-t border-gray-200 dark:border-tg-border bg-gray-50 dark:bg-tg-panel/40">
+        <button onclick="performLogout()" class="w-full p-2.5 rounded-xl text-rose-500 hover:bg-rose-500/10 font-bold flex items-center justify-center gap-2 text-sm transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
@@ -316,8 +400,8 @@
 
     <!-- ================= MODAL ZAPGRAM PREMIUM ================= -->
     <div id="modal-premium" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-tg-sidebar border border-tg-border rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
-        <button onclick="closePremiumModal()" class="absolute top-4 right-4 p-1.5 rounded-full text-tg-muted hover:text-white">
+      <div class="bg-white dark:bg-tg-sidebar border border-gray-200 dark:border-tg-border rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
+        <button onclick="closePremiumModal()" class="absolute top-4 right-4 p-1.5 rounded-full text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white">
           ✕
         </button>
 
@@ -325,65 +409,74 @@
           ⭐
         </div>
 
-        <h2 class="text-2xl font-black text-white mb-1">ZAPGRAM Premium</h2>
-        <p class="text-xs text-tg-muted mb-6">Status da Conta do Fundador.</p>
+        <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-1">ZAPGRAM Premium</h2>
+        <p class="text-xs text-gray-500 dark:text-tg-muted mb-6">Status da Conta do Fundador.</p>
 
         <div class="space-y-3 text-left mb-6 font-medium text-xs">
-          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-tg-panel/60 border border-tg-border">
+          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-tg-panel/60 border border-gray-200 dark:border-tg-border">
             <span class="text-lg">👑</span>
             <div>
-              <div class="font-bold text-white">Conta Master do Idealizador</div>
-              <div class="text-tg-muted">Acesso vitalício irrestrito a todas as ferramentas.</div>
+              <div class="font-bold text-gray-900 dark:text-white">Conta Master do Idealizador</div>
+              <div class="text-gray-500 dark:text-tg-muted">Acesso vitalício irrestrito a todas as ferramentas.</div>
             </div>
           </div>
 
-          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-tg-panel/60 border border-tg-border">
+          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-tg-panel/60 border border-gray-200 dark:border-tg-border">
             <span class="text-lg">⚡</span>
             <div>
-              <div class="font-bold text-white">Tesouraria de 11 Dígitos</div>
-              <div class="text-tg-muted">10.000.000.000 de ZapStars disponíveis para emitir ou apoiar.</div>
+              <div class="font-bold text-gray-900 dark:text-white">Tesouraria de 11 Dígitos</div>
+              <div class="text-gray-500 dark:text-tg-muted">10.000.000.000 de ZapStars disponíveis para emitir ou apoiar.</div>
             </div>
           </div>
 
-          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-tg-panel/60 border border-tg-border">
+          <div class="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-tg-panel/60 border border-gray-200 dark:border-tg-border">
             <span class="text-lg">🚫</span>
             <div>
-              <div class="font-bold text-white">Isenção Total de Anúncios</div>
-              <div class="text-tg-muted">Navegação 100% limpa em todos os canais e grupos.</div>
+              <div class="font-bold text-gray-900 dark:text-white">Isenção Total de Anúncios</div>
+              <div class="text-gray-500 dark:text-tg-muted">Navegação 100% limpa em todos os canais e grupos.</div>
             </div>
           </div>
         </div>
 
-        <button onclick="closePremiumModal()" class="w-full py-3.5 rounded-2xl bg-emerald-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
+        <button onclick="triggerConfetti(); closePremiumModal();" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
           ✓ Status: Fundador Master Ativo
         </button>
       </div>
     </div>
 
     <!-- ================= SIDEBAR LATERAL (LISTA DE CHATS) ================= -->
-    <aside id="sidebar" class="w-full md:w-80 lg:w-96 bg-tg-sidebar border-r border-tg-border flex flex-col flex-shrink-0 z-10 transition-transform duration-200">
+    <aside id="sidebar" class="w-full md:w-80 lg:w-96 bg-white dark:bg-tg-sidebar border-r border-gray-200 dark:border-tg-border flex flex-col flex-shrink-0 z-10 transition-transform duration-200">
       
-      <!-- Topo da Marca: Menu Hambúrguer, Logo ZAPGRAM e Badge do Fundador -->
-      <div class="px-4 pt-3.5 pb-2.5 flex items-center justify-between border-b border-tg-border/50">
+      <!-- Topo: Menu Hambúrguer, Logo Híbrido ZAPGRAM, Troca de Tema e Badge -->
+      <div class="px-4 pt-3.5 pb-2.5 flex items-center justify-between border-b border-gray-200 dark:border-tg-border/50">
         <div class="flex items-center gap-2.5">
-          <button onclick="toggleMenuDrawer()" class="p-1.5 rounded-lg hover:bg-tg-hover text-tg-muted hover:text-white transition" title="Abrir Menu">
+          <button onclick="toggleMenuDrawer()" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-tg-hover text-gray-600 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition" title="Abrir Menu">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow-lg shadow-teal-500/20">
-            ⚡
+          
+          <!-- Ícone Híbrido: Balão Azul WhatsApp + Avião Verde Telegram -->
+          <div class="w-9 h-9 drop-shadow-[0_2px_8px_rgba(34,158,217,0.4)] flex items-center justify-center">
+            <svg class="w-full h-full" viewBox="0 0 100 100">
+              <use href="#zapgram-hybrid-icon" />
+            </svg>
           </div>
           <div>
-            <span class="font-black text-lg tracking-wider text-white">ZAP<span class="text-teal-400">GRAM</span></span>
+            <span class="font-black text-lg tracking-wider text-gray-900 dark:text-white">ZAP<span class="text-teal-500 dark:text-teal-400">GRAM</span></span>
           </div>
         </div>
 
-        <!-- Botão de Acesso Rápido com Coroa de Fundador -->
-        <button onclick="toggleMenuDrawer()" title="Conta do Fundador (10B ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-400 border border-yellow-400/40 flex items-center gap-1.5 text-xs font-black transition">
-          <span>👑</span>
-          <span>10B ⭐</span>
-        </button>
+        <div class="flex items-center gap-1.5">
+          <button onclick="toggleTheme()" title="Mudar Modo Claro/Escuro" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover text-gray-600 dark:text-yellow-400 transition">
+            <span id="header-theme-icon" class="text-base">🌙</span>
+          </button>
+
+          <button onclick="toggleMenuDrawer()" title="Conta do Fundador (10B ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-600 dark:text-yellow-400 border border-yellow-400/40 flex items-center gap-1 text-xs font-black transition">
+            <span>👑</span>
+            <span>10B ⭐</span>
+          </button>
+        </div>
       </div>
 
       <!-- Barra de Pesquisa -->
@@ -394,26 +487,26 @@
             id="search-input" 
             oninput="handleSearch(this.value)"
             placeholder="Pesquisar conversas..." 
-            class="w-full bg-[#141414] border border-transparent focus:border-teal-400 text-sm rounded-full py-1.5 pl-9 pr-4 text-white placeholder-tg-muted focus:outline-none transition font-sans"
+            class="w-full bg-gray-100 dark:bg-[#141414] border border-transparent focus:border-teal-400 text-sm rounded-full py-1.5 pl-9 pr-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-tg-muted focus:outline-none transition font-sans"
           >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-2.5 text-tg-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-2.5 text-gray-400 dark:text-tg-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
       </div>
 
       <!-- Abas / Pastas de Conversa -->
-      <div class="flex items-center border-b border-tg-border px-2 text-xs font-bold text-tg-muted overflow-x-auto">
-        <button onclick="filterFolder('all')" class="folder-tab px-3.5 py-2.5 text-teal-400 border-b-2 border-teal-400 transition whitespace-nowrap">
+      <div class="flex items-center border-b border-gray-200 dark:border-tg-border px-2 text-xs font-bold text-gray-500 dark:text-tg-muted overflow-x-auto">
+        <button id="tab-all" onclick="filterFolder('all', this)" class="folder-tab px-3.5 py-2.5 text-teal-600 dark:text-teal-400 border-b-2 border-teal-500 dark:border-teal-400 transition whitespace-nowrap font-bold">
           Todas
         </button>
-        <button onclick="filterFolder('bots')" class="folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+        <button id="tab-bots" onclick="filterFolder('bots', this)" class="folder-tab px-3.5 py-2.5 hover:text-gray-900 dark:hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
           ZapBots ⚡
         </button>
-        <button onclick="filterFolder('groups')" class="folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+        <button id="tab-groups" onclick="filterFolder('groups', this)" class="folder-tab px-3.5 py-2.5 hover:text-gray-900 dark:hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
           Grupos
         </button>
-        <button onclick="filterFolder('channels')" class="folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
+        <button id="tab-channels" onclick="filterFolder('channels', this)" class="folder-tab px-3.5 py-2.5 hover:text-gray-900 dark:hover:text-white border-b-2 border-transparent transition whitespace-nowrap">
           Canais 📢
         </button>
       </div>
@@ -428,38 +521,40 @@
     <main id="chat-window" class="flex-1 flex flex-col zapgram-wallpaper relative">
 
       <!-- Header da Conversa Atual -->
-      <header id="chat-header" class="h-14 bg-tg-sidebar/95 backdrop-blur border-b border-tg-border flex items-center justify-between px-4 z-10 flex-shrink-0">
+      <header id="chat-header" class="h-14 bg-white/95 dark:bg-tg-sidebar/95 backdrop-blur border-b border-gray-200 dark:border-tg-border flex items-center justify-between px-4 z-10 flex-shrink-0">
         <div class="flex items-center gap-3">
-          <button onclick="closeChatMobile()" class="md:hidden p-1.5 rounded-full hover:bg-tg-hover text-tg-muted hover:text-white mr-1">
+          <button onclick="closeChatMobile()" class="md:hidden p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white mr-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          <div id="active-avatar" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 bg-teal-500">
-            ⚡
+          <!-- Avatar com Ícone Híbrido -->
+          <div id="active-avatar" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 p-1">
+            <svg class="w-full h-full" viewBox="0 0 100 100">
+              <use href="#zapgram-hybrid-icon" />
+            </svg>
           </div>
 
           <div>
             <div class="flex items-center gap-1.5">
-              <h2 id="active-name" class="font-bold text-base leading-tight">ZAPGRAM Assistant</h2>
+              <h2 id="active-name" class="font-bold text-base leading-tight text-gray-900 dark:text-white">ZAPGRAM Assistant</h2>
               <span id="active-badge" class="text-xs"></span>
             </div>
-            <div id="active-status" class="text-xs text-teal-400 flex items-center gap-1.5 font-medium">
+            <div id="active-status" class="text-xs text-teal-600 dark:text-teal-400 flex items-center gap-1.5 font-medium">
               online
             </div>
           </div>
         </div>
 
         <!-- Ícones de Ação -->
-        <div class="flex items-center gap-1 text-tg-muted">
-          <!-- Botão Enviar Gorjeta de Fundador -->
-          <button onclick="sendFounderTip()" title="Enviar 10.000 ZapStars da Tesouraria do Fundador" class="p-2 rounded-full hover:bg-tg-hover text-yellow-400 transition flex items-center gap-1 text-xs font-black">
+        <div class="flex items-center gap-1 text-gray-600 dark:text-tg-muted">
+          <button onclick="sendFounderTip()" title="Enviar 10.000 ZapStars da Tesouraria do Fundador" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover text-yellow-600 dark:text-yellow-400 transition flex items-center gap-1 text-xs font-black">
             <span class="text-base">⭐</span>
             <span class="hidden sm:inline">Doar 10.000 ⭐</span>
           </button>
 
-          <button class="p-2 rounded-full hover:bg-tg-hover hover:text-white transition" title="Mais Opções">
+          <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover hover:text-gray-900 dark:hover:text-white transition" title="Mais Opções">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
             </svg>
@@ -473,17 +568,17 @@
       </div>
 
       <!-- Indicador Flutuante de Digitando -->
-      <div id="typing-indicator" class="hidden px-6 py-1 text-xs text-tg-muted flex items-center gap-2">
+      <div id="typing-indicator" class="hidden px-6 py-1 text-xs text-gray-500 dark:text-tg-muted flex items-center gap-2">
         <span id="typing-name">ZapBot</span> está digitando
         <span class="inline-flex items-center gap-0.5">
-          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full dot-1"></span>
-          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full dot-2"></span>
-          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full dot-3"></span>
+          <span class="w-1.5 h-1.5 bg-teal-500 rounded-full dot-1"></span>
+          <span class="w-1.5 h-1.5 bg-teal-500 rounded-full dot-2"></span>
+          <span class="w-1.5 h-1.5 bg-teal-500 rounded-full dot-3"></span>
         </span>
       </div>
 
       <!-- Painel Seletor de Emojis Pop-up -->
-      <div id="emoji-picker" class="hidden absolute bottom-16 left-6 md:left-24 bg-tg-sidebar border border-tg-border p-3 rounded-2xl shadow-2xl z-30 grid grid-cols-6 gap-2 text-2xl">
+      <div id="emoji-picker" class="hidden absolute bottom-16 left-6 md:left-24 bg-white dark:bg-tg-sidebar border border-gray-200 dark:border-tg-border p-3 rounded-2xl shadow-2xl z-30 grid grid-cols-6 gap-2 text-2xl">
         <button onclick="insertEmoji('👑')" class="hover:scale-125 transition p-1">👑</button>
         <button onclick="insertEmoji('⭐')" class="hover:scale-125 transition p-1">⭐</button>
         <button onclick="insertEmoji('⚡')" class="hover:scale-125 transition p-1">⚡</button>
@@ -498,10 +593,15 @@
         <button onclick="insertEmoji('✨')" class="hover:scale-125 transition p-1">✨</button>
       </div>
 
+      <!-- Barra de Ações Rápidas do ZapBot (Bot Keyboard) -->
+      <div id="bot-quick-actions" class="px-3 md:px-8 lg:px-24 py-1.5 flex items-center gap-2 overflow-x-auto bg-gray-50/90 dark:bg-tg-sidebar/90 backdrop-blur border-t border-gray-200 dark:border-tg-border/50 z-10 flex-shrink-0">
+        <!-- Inserido dinamicamente via JS -->
+      </div>
+
       <!-- Input Footer de Envio de Mensagens -->
       <footer class="p-3 md:px-8 lg:px-24 flex items-center gap-2 bg-transparent z-10 flex-shrink-0">
-        <div class="flex-1 bg-tg-sidebar border border-tg-border rounded-2xl flex items-center px-3 py-1 shadow-md focus-within:border-teal-400 transition">
-          <button onclick="toggleEmojiPicker()" class="p-2 text-tg-muted hover:text-white transition rounded-full" title="Emojis">
+        <div class="flex-1 bg-white dark:bg-tg-sidebar border border-gray-300 dark:border-tg-border rounded-2xl flex items-center px-3 py-1 shadow-md focus-within:border-teal-400 transition">
+          <button onclick="toggleEmojiPicker()" class="p-2 text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition rounded-full" title="Emojis">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -512,10 +612,10 @@
             id="message-input" 
             onkeydown="handleKeyDown(event)"
             placeholder="Mensagem rápida como Fundador..." 
-            class="flex-1 bg-transparent py-2.5 px-2 text-white placeholder-tg-muted text-sm focus:outline-none"
+            class="flex-1 bg-transparent py-2.5 px-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-tg-muted text-sm focus:outline-none"
           >
 
-          <button onclick="sendAttachment()" class="p-2 text-tg-muted hover:text-white transition rounded-full" title="Anexar arquivo">
+          <button onclick="sendAttachment()" class="p-2 text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition rounded-full" title="Anexar arquivo">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
@@ -596,8 +696,88 @@
       } catch (e) {}
     }
 
-    // ================= ESTADO DE MONETIZAÇÃO DO FUNDADOR =================
-    // 11 DÍGITOS = 10.000.000.000 (Dez Bilhões de ZapStars)
+    // ================= SISTEMA NATIVO DE CHUVA DE CONFETES 🎉 =================
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#00d2d3', '#25D366', '#229ED9', '#ffc107', '#ff4757', '#70a1ff'];
+
+      for (let i = 0; i < 90; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * -canvas.height * 0.5,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 5 + 3,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotationSpeed;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        });
+
+        frame++;
+        if (frame < 140) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      animate();
+    }
+
+    // ================= ALTERNAR TEMA CLARO / ESCURO ☀️ / 🌙 =================
+    let isDarkMode = localStorage.getItem('zapgram_theme') !== 'light';
+
+    function applyTheme() {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('header-theme-icon');
+      const drawerIcon = document.getElementById('theme-btn-icon');
+      const drawerDesc = document.getElementById('theme-btn-desc');
+
+      if (isDarkMode) {
+        html.classList.add('dark');
+        if (themeIcon) themeIcon.textContent = '🌙';
+        if (drawerIcon) drawerIcon.textContent = '🌙';
+        if (drawerDesc) drawerDesc.textContent = 'Modo Noturno Ativo';
+        localStorage.setItem('zapgram_theme', 'dark');
+      } else {
+        html.classList.remove('dark');
+        if (themeIcon) themeIcon.textContent = '☀️';
+        if (drawerIcon) drawerIcon.textContent = '☀️';
+        if (drawerDesc) drawerDesc.textContent = 'Modo Claro Ativo';
+        localStorage.setItem('zapgram_theme', 'light');
+      }
+      renderMessages();
+      renderChatList();
+    }
+
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      applyTheme();
+      playZapSound('sent');
+    }
+
+    // ================= ESTADO DE MONETIZAÇÃO DO FUNDADOR (11 DÍGITOS) =================
     const FOUNDER_STARS = 10000000000;
     let zapStars = parseInt(localStorage.getItem('zapgram_stars')) || FOUNDER_STARS;
 
@@ -616,13 +796,14 @@
     }
 
     function sendFounderTip() {
-      const tipAmount = 10000; // Doa 10 mil de cada vez
+      const tipAmount = 10000;
       if (zapStars >= tipAmount) {
         zapStars -= tipAmount;
         localStorage.setItem('zapgram_stars', zapStars.toString());
         updateStarsDisplay();
-        playZapSound('sent');
-        alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars para o canal!\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐.`);
+        playZapSound('premium');
+        triggerConfetti();
+        alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars para o canal! 🎉\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐.`);
       }
     }
 
@@ -653,10 +834,12 @@
       const overlay = document.getElementById('qr-success-overlay');
       overlay.classList.remove('hidden');
       playZapSound('login');
+      triggerConfetti();
 
       setTimeout(() => {
         document.getElementById('screen-login').classList.add('hidden');
         document.getElementById('screen-app').classList.remove('hidden');
+        applyTheme();
         renderChatList();
         selectChat(activeChatId);
         updateStarsDisplay();
@@ -680,12 +863,39 @@
         category: 'bots',
         avatarBg: 'bg-gradient-to-tr from-teal-500 to-emerald-400',
         avatarText: '⚡',
-        status: 'zapbot oficial',
+        status: 'zapbot oficial • online',
         isChannel: false,
         unread: 0,
         messages: [
           { text: 'Saudações, Oziel! Seja bem-vindo ao ZAPGRAM como Idealizador e Fundador!', fromMe: false, time: '14:20' },
-          { text: 'Sua conta foi configurada com o status de Fundador 👑 e sua tesouraria está abastecida com 10.000.000.000 de ZapStars (11 dígitos)! ⭐', fromMe: false, time: '14:21' }
+          { text: 'O novo ícone híbrido oficial (Balão do WhatsApp Azul + Aviãozinho do Telegram Verde) já está ativo no logotipo do app! 🚀', fromMe: false, time: '14:21' },
+          { text: '💡 Dica: Você pode digitar qualquer mensagem, fazer contas, ou clicar nos botões rápidos abaixo como /saldo, /ajuda ou /doar!', fromMe: false, time: '14:22' }
+        ]
+      },
+      {
+        id: 3,
+        name: 'Duo Coruja 🦉',
+        category: 'bots',
+        avatarBg: 'bg-gradient-to-tr from-green-500 to-lime-400',
+        avatarText: '🦉',
+        status: 'zapbot de idiomas • online',
+        isChannel: false,
+        unread: 1,
+        messages: [
+          { text: 'Hi Oziel! Pronto para treinar seu inglês hoje? Me mande um "Hello" ou clique em /quiz! 🔥', fromMe: false, time: '12:15' }
+        ]
+      },
+      {
+        id: 5,
+        name: 'TraderBot Nexus 📈',
+        category: 'bots',
+        avatarBg: 'bg-gradient-to-tr from-cyan-600 to-blue-500',
+        avatarText: '🤖',
+        status: 'zapbot financeiro • online',
+        isChannel: false,
+        unread: 1,
+        messages: [
+          { text: '🤖 Olá! Sou o bot analista de mercado. Clique em /btc ou /sinal para relatórios em tempo real!', fromMe: false, time: '10:30' }
         ]
       },
       {
@@ -693,26 +903,13 @@
         name: 'Nexus Crypto Alerts',
         category: 'channels',
         avatarBg: 'bg-gradient-to-tr from-purple-600 to-indigo-500',
-        avatarText: '📈',
+        avatarText: '📢',
         status: 'canal oficial • 24.8K inscritos',
         isChannel: true,
         unread: 2,
         messages: [
-          { text: '🚨 ALERTA: Bitcoin rompeu a resistência e superou os $65.000 USDT!', fromMe: false, time: '09:42' },
+          { text: '🚨 ALERTA: Bitcoin rompeu a resistência e superou os $68.000 USDT!', fromMe: false, time: '09:42' },
           { text: 'Confira as posições no seu simulador de corretora. 🚀', fromMe: false, time: '09:43' }
-        ]
-      },
-      {
-        id: 3,
-        name: 'Duo (Duolingo)',
-        category: 'bots',
-        avatarBg: 'bg-gradient-to-tr from-green-500 to-lime-400',
-        avatarText: '🦉',
-        status: 'online',
-        isChannel: false,
-        unread: 1,
-        messages: [
-          { text: 'Ei! Já praticou seus 15 minutos de inglês hoje no seu clone? 🔥', fromMe: false, time: '12:15' }
         ]
       },
       {
@@ -721,17 +918,45 @@
         category: 'groups',
         avatarBg: 'bg-gradient-to-tr from-amber-500 to-orange-500',
         avatarText: '👥',
-        status: '1.428 membros',
+        status: 'grupo comunitário • 1.428 membros',
         isChannel: false,
         unread: 0,
         messages: [
-          { text: 'A tesouraria de 11 dígitos do ZAPGRAM para o Fundador ficou lendária!', fromMe: false, time: 'Ontem' },
-          { text: 'Sim! 10 bilhões de ZapStars para gerenciar e incentivar o ecossistema!', fromMe: true, time: 'Ontem' }
+          { text: 'Esse ícone híbrido do ZAPGRAM com balão azul e avião verde ficou muito criativo!', fromMe: false, time: 'Ontem' },
+          { text: 'Sim, a fusão das marcas ficou espetacular e muito marcante.', fromMe: true, time: 'Ontem' }
         ]
       }
     ];
 
-    let chats = JSON.parse(localStorage.getItem('zapgram_chats')) || defaultChats;
+    // Migração transparente de cache para garantir que novos bots e categorias apareçam
+    function getInitialChats() {
+      const stored = localStorage.getItem('zapgram_chats');
+      if (!stored) return defaultChats;
+      try {
+        let parsed = JSON.parse(stored);
+        if (!Array.isArray(parsed) || parsed.length === 0) return defaultChats;
+        defaultChats.forEach(defChat => {
+          const existing = parsed.find(c => c.id === defChat.id);
+          if (!existing) {
+            parsed.push(defChat);
+          } else {
+            existing.category = defChat.category;
+            existing.avatarBg = defChat.avatarBg;
+            existing.avatarText = defChat.avatarText;
+            existing.status = defChat.status;
+            existing.isChannel = defChat.isChannel;
+            if (!existing.messages || existing.messages.length === 0) {
+              existing.messages = defChat.messages;
+            }
+          }
+        });
+        return parsed;
+      } catch (e) {
+        return defaultChats;
+      }
+    }
+
+    let chats = getInitialChats();
     let activeChatId = chats[0].id;
     let currentFolder = 'all';
 
@@ -751,7 +976,7 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="p-6 text-center text-tg-muted text-sm">Nenhuma conversa encontrada.</div>';
+        container.innerHTML = '<div class="p-6 text-center text-gray-500 dark:text-tg-muted text-sm">Nenhuma conversa encontrada nesta aba.</div>';
         return;
       }
 
@@ -760,27 +985,41 @@
         const isActive = chat.id === activeChatId;
 
         const div = document.createElement('div');
-        div.className = `p-3 flex items-center gap-3 cursor-pointer transition ${isActive ? 'bg-tg-active/40 border-l-4 border-teal-400' : 'hover:bg-tg-hover'}`;
+        div.className = `p-3 flex items-center gap-3 cursor-pointer transition ${
+          isActive 
+            ? 'bg-teal-50 dark:bg-tg-active/40 border-l-4 border-teal-500 dark:border-teal-400' 
+            : 'hover:bg-gray-100 dark:hover:bg-tg-hover'
+        }`;
         div.onclick = () => selectChat(chat.id);
+
+        let avatarHtml = `<div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0 ${chat.avatarBg}">${chat.avatarText}</div>`;
+        if (chat.id === 1) {
+          avatarHtml = `
+            <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 p-1">
+              <svg class="w-full h-full" viewBox="0 0 100 100">
+                <use href="#zapgram-hybrid-icon" />
+              </svg>
+            </div>
+          `;
+        }
 
         div.innerHTML = `
           <div class="relative">
-            <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0 ${chat.avatarBg}">
-              ${chat.avatarText}
-            </div>
-            ${chat.status === 'online' ? '<span class="w-3.5 h-3.5 bg-emerald-400 border-2 border-tg-sidebar rounded-full absolute bottom-0 right-0"></span>' : ''}
+            ${avatarHtml}
+            ${chat.status.includes('online') ? '<span class="w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-tg-sidebar rounded-full absolute bottom-0 right-0"></span>' : ''}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-baseline mb-1">
               <div class="flex items-center gap-1.5 truncate">
-                <h3 class="font-bold text-sm text-white truncate">${chat.name}</h3>
-                ${chat.category === 'channels' ? '<span class="text-xs text-tg-muted">📢</span>' : ''}
+                <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate">${chat.name}</h3>
+                ${chat.category === 'channels' ? '<span class="text-xs text-gray-400">📢</span>' : ''}
+                ${chat.category === 'bots' ? '<span class="text-[10px] bg-teal-500/20 text-teal-600 dark:text-teal-400 font-bold px-1.5 py-0.2 rounded">BOT</span>' : ''}
               </div>
-              <span class="text-[11px] text-tg-muted font-normal">${lastMsg ? lastMsg.time : ''}</span>
+              <span class="text-[11px] text-gray-500 dark:text-tg-muted font-normal">${lastMsg ? lastMsg.time : ''}</span>
             </div>
             <div class="flex justify-between items-center text-xs">
-              <p class="text-tg-muted truncate pr-2">
-                ${lastMsg ? (lastMsg.fromMe ? '<span class="text-teal-400 font-bold">Você: </span>' : '') + lastMsg.text : 'Sem mensagens'}
+              <p class="text-gray-500 dark:text-tg-muted truncate pr-2">
+                ${lastMsg ? (lastMsg.fromMe ? '<span class="text-teal-600 dark:text-teal-400 font-bold">Você: </span>' : '') + lastMsg.text : 'Sem mensagens'}
               </p>
               ${chat.unread > 0 ? `<span class="bg-gradient-to-r from-teal-500 to-emerald-400 text-black font-extrabold text-[10px] px-2 py-0.5 rounded-full flex-shrink-0 shadow-sm">${chat.unread}</span>` : ''}
             </div>
@@ -799,9 +1038,18 @@
 
         document.getElementById('active-name').textContent = chat.name;
         document.getElementById('active-status').textContent = chat.status;
+
+        // Atualizar avatar dinamicamente no cabeçalho
         const avatarEl = document.getElementById('active-avatar');
-        avatarEl.className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 ${chat.avatarBg}`;
-        avatarEl.textContent = chat.avatarText;
+        if (chat.id === 1) {
+          avatarEl.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 p-1';
+          avatarEl.innerHTML = '<svg class="w-full h-full" viewBox="0 0 100 100"><use href="#zapgram-hybrid-icon" /></svg>';
+        } else {
+          avatarEl.className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-md flex-shrink-0 ${chat.avatarBg}`;
+          avatarEl.innerHTML = chat.avatarText;
+        }
+
+        renderBotKeyboard(chat.id);
 
         document.getElementById('sidebar').classList.add('hidden', 'md:flex');
         document.getElementById('chat-window').classList.remove('hidden');
@@ -809,6 +1057,68 @@
         renderMessages();
         renderChatList();
       }
+    }
+
+    function renderBotKeyboard(chatId) {
+      const container = document.getElementById('bot-quick-actions');
+      if (!container) return;
+      container.innerHTML = '';
+
+      let buttons = [];
+      if (chatId === 1) {
+        buttons = [
+          { label: '⭐ Saldo do Fundador', cmd: '/saldo' },
+          { label: '💡 Comandos', cmd: '/ajuda' },
+          { label: '👑 Status Master', cmd: '/fundador' },
+          { label: '🎉 Doar 10.000 ⭐', cmd: '/doar' },
+          { label: '🎨 Logo Híbrido', cmd: '/logo' },
+          { label: '🌙 Alternar Tema', cmd: '/tema' }
+        ];
+      } else if (chatId === 3) {
+        buttons = [
+          { label: '🦉 Fazer Quiz', cmd: '/quiz' },
+          { label: '🇺🇸 Treinar Inglês', cmd: 'Hello Duo! How are you today?' },
+          { label: '🇪🇸 Treinar Espanhol', cmd: '¡Hola Duo! ¿Cómo estás?' },
+          { label: '📖 Dica de Estudo', cmd: '/dica' }
+        ];
+      } else if (chatId === 5) {
+        buttons = [
+          { label: '📊 Preço BTC', cmd: '/btc' },
+          { label: '💎 Preço ETH', cmd: '/eth' },
+          { label: '⚡ Sinal Técnico', cmd: '/sinal' },
+          { label: '📈 Notícias do Mercado', cmd: '/mercado' }
+        ];
+      }
+
+      if (buttons.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      buttons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'px-3 py-1 rounded-full text-xs font-bold bg-white dark:bg-tg-panel hover:bg-teal-500 hover:text-white dark:hover:bg-teal-400 dark:hover:text-black border border-gray-200 dark:border-tg-border text-teal-600 dark:text-teal-400 shadow-xs transition active:scale-95 whitespace-nowrap flex items-center gap-1';
+        btn.textContent = b.label;
+        btn.onclick = () => sendQuickMessage(b.cmd);
+        container.appendChild(btn);
+      });
+    }
+
+    function sendQuickMessage(text) {
+      const input = document.getElementById('message-input');
+      input.value = text;
+      sendMessage();
+    }
+
+    function formatMessageText(text) {
+      let formatted = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      formatted = formatted.replace(/\n/g, '<br>');
+      return formatted;
     }
 
     function renderMessages() {
@@ -824,13 +1134,15 @@
         bubble.className = `flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`;
 
         bubble.innerHTML = `
-          <div class="max-w-[75%] md:max-w-[60%] rounded-2xl px-3.5 py-2 shadow-sm text-sm relative break-words ${
-            msg.fromMe ? 'bg-gradient-to-r from-[#5f27cd] to-[#6c5ce7] text-white rounded-br-xs' : 'bg-tg-bubbleIn text-gray-100 rounded-bl-xs'
+          <div class="max-w-[75%] md:max-w-[60%] rounded-2xl px-4 py-2.5 shadow-sm text-sm relative break-words ${
+            msg.fromMe 
+              ? 'bg-gradient-to-r from-[#0284c7] via-[#229ED9] to-[#10b981] text-white rounded-br-xs shadow-md' 
+              : 'bg-white dark:bg-tg-bubbleIn text-gray-800 dark:text-gray-100 rounded-bl-xs border border-gray-200/50 dark:border-transparent'
           }">
-            <div class="mb-1 leading-relaxed">${msg.text}</div>
-            <div class="flex items-center justify-end gap-1 text-[10px] text-white/70 font-mono -mb-0.5">
+            <div class="mb-1 leading-relaxed whitespace-pre-line">${formatMessageText(msg.text)}</div>
+            <div class="flex items-center justify-end gap-1 text-[10px] ${msg.fromMe ? 'text-white/90' : 'text-gray-400 dark:text-white/60'} font-mono -mb-0.5">
               <span>${msg.time}</span>
-              ${msg.fromMe ? '<span class="text-teal-300 font-bold">✓✓</span>' : ''}
+              ${msg.fromMe ? '<span class="text-emerald-200 font-bold">✓✓</span>' : ''}
             </div>
           </div>
         `;
@@ -866,51 +1178,187 @@
       triggerAutoReply(chat, text);
     }
 
-    function triggerAutoReply(chat, userText) {
+    // ================= MOTOR DE INTELIGÊNCIA ARTIFICIAL REAL (AI ENGINE) =================
+    function configureGeminiKey() {
+      const current = localStorage.getItem('zapgram_gemini_key') || '';
+      const key = prompt(
+        "⚡ CONFIGURAÇÃO DO CÉREBRO DE IA DO ZAPGRAM\n\nO ZAPGRAM já possui uma IA pública gratuita ativa!\nSe quiser usar sua própria chave da Google (Gemini 1.5 Flash), cole-a abaixo (ou deixe em branco para usar a IA gratuita):",
+        current
+      );
+      if (key !== null) {
+        if (key.trim()) {
+          localStorage.setItem('zapgram_gemini_key', key.trim());
+          alert("✅ Chave da Google Gemini salva com sucesso! Os ZapBots agora usam o motor oficial Gemini 1.5 Flash.");
+        } else {
+          localStorage.removeItem('zapgram_gemini_key');
+          alert("✅ Configurado para usar a IA pública gratuita (sem limites)!");
+        }
+      }
+    }
+
+    async function queryAI(systemPrompt, userText) {
+      // 1. Chave Gemini Oficial da Google (se configurada)
+      const userGeminiKey = localStorage.getItem('zapgram_gemini_key');
+      if (userGeminiKey) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userGeminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `${systemPrompt}\n\nPergunta do Usuário: ${userText}` }] }]
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text && text.trim()) return text.trim();
+          }
+        } catch (e) {
+          console.warn("Gemini error, fallback:", e);
+        }
+      }
+
+      // 2. Motor de IA Pública Gratuita (CORS habilitado - sem necessidade de chave)
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 9500);
+
+        const cleanPrompt = encodeURIComponent(userText.slice(0, 500));
+        const cleanSys = encodeURIComponent(systemPrompt.slice(0, 400));
+        const url = `https://text.pollinations.ai/${cleanPrompt}?system=${cleanSys}&model=openai`;
+
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const aiText = await res.text();
+          if (aiText && aiText.trim() && !aiText.includes('<!DOCTYPE') && !aiText.includes('Error')) {
+            return aiText.trim();
+          }
+        }
+      } catch (err) {
+        console.warn("AI fetch fallback to local engine:", err);
+      }
+
+      // 3. Base de Conhecimento Local Inteligente (Offline Fallback)
+      return getLocalIntelligentAnswer(userText);
+    }
+
+    function getLocalIntelligentAnswer(text) {
+      const t = text.toLowerCase();
+
+      // Cálculos Matemáticos Automáticos
+      if (/[\d]/.test(text) && /[\+\-\*\/]/.test(text) && !/[a-zA-Z]{3,}/.test(text)) {
+        try {
+          const clean = text.replace(/,/g, '.').replace(/[^\d\+\-\*\/\(\)\.]/g, '');
+          const res = Function(`'use strict'; return (${clean})`)();
+          return `🧮 **Resultado Matemático:** ${text} = **${res}**`;
+        } catch (e) {}
+      }
+
+      // Conhecimentos Gerais & Perguntas Frequentes
+      if (t.includes('capital da frança') || t.includes('capital de frança')) return "A capital da França é **Paris**, famosa pela Torre Eiffel, Museu do Louvre e gastronomia! 🗼";
+      if (t.includes('capital do brasil')) return "A capital do Brasil é **Brasília**, no Distrito Federal, planejada por Lúcio Costa e com obras de Oscar Niemeyer. 🏛️";
+      if (t.includes('capital dos estados unidos') || t.includes('capital dos eua')) return "A capital dos Estados Unidos é **Washington, D.C.** 🇺🇸";
+      if (t.includes('sistema solar') || t.includes('planetas')) return "O Sistema Solar possui **8 planetas**: Mercúrio, Vênus, Terra, Marte, Júpiter, Saturno, Urano e Netuno. 🪐";
+      if (t.includes('quem é você') || t.includes('quem e voce') || t.includes('o que você faz')) return "Sou o **ZAPGRAM Assistant**, inteligência artificial oficial criada para apoiar você e o Fundador **Oziel Leite**! Posso tirar dúvidas, fazer cálculos, traduzir textos e explicar qualquer assunto. ⚡";
+      if (t.includes('quem é o fundador') || t.includes('quem criou') || t.includes('quem e o fundador')) return "O **ZAPGRAM** foi idealizado e fundado por **Oziel Leite**, que detém o status master `👑 FUNDADOR` e tesouro de 10 bilhões de ZapStars! 👑⭐";
+      if (t.includes('o que é inteligência artificial') || t.includes('o que é ia')) return "A **Inteligência Artificial (IA)** é a capacidade de softwares simularem raciocínio humano, processamento de linguagem, aprendizado contínuo e resolução de problemas complexos. 🤖";
+      if (t.includes('o que é bitcoin') || t.includes('o que é btc')) return "O **Bitcoin (BTC)** é a principal criptomoeda descentralizada do mundo, lançada em 2008 por Satoshi Nakamoto para permitir transações financeiras seguras sem bancos intermediários. ₿";
+      if (t.includes('piada')) return "Por que o livro de matemática se suicidou? Porque tinha muitos problemas! 😂📚";
+      if (t.includes('conselho') || t.includes('dica')) return "💡 **Conselho de ouro:** A consistência diária de 20 minutos constrói impérios muito mais rápido do que picos esporádicos de esforço!";
+      if (t.includes('como fazer bolo')) return "🍰 **Bolo Caseiro Fofinho:**\n1. Bata 3 ovos com 2 xícaras de açúcar e 3 colheres de manteiga.\n2. Misture 3 xícaras de farinha de trigo e 1 xícara de leite morno.\n3. Finalize com 1 colher de fermento em pó.\n4. Asse a 180°C por 40 minutos!";
+      if (t.includes('como você está') || t.includes('tudo bem') || t.includes('tudo bom')) return "Estou excelente e 100% pronto para suas ordens, Fundador Oziel! Em que posso te ajudar hoje? ⚡";
+      if (t.includes('obrigado') || t.includes('valeu') || t.includes('grato')) return "Por nada, Oziel! Sempre que precisar, é só me mandar uma mensagem! 🚀";
+
+      return `Entendido, Oziel! Analisei sua pergunta sobre **"${text}"**. Como IA oficial do ZAPGRAM, posso ajudá-lo a desenvolver qualquer tema, responder dúvidas científicas, programar ou aprimorar seu aplicativo! Digite **/ajuda** para ver os atalhos disponíveis. 💡`;
+    }
+
+    async function triggerAutoReply(chat, userText) {
       const typingIndicator = document.getElementById('typing-indicator');
       document.getElementById('typing-name').textContent = chat.name;
       typingIndicator.classList.remove('hidden');
 
-      const delay = Math.floor(Math.random() * 1000) + 1200;
+      let reply = "";
+      const lower = userText.toLowerCase().trim();
 
-      setTimeout(() => {
-        typingIndicator.classList.add('hidden');
+      // ================= ATALHOS / COMANDOS RÁPIDOS =================
+      if (chat.id === 1) { // ZAPGRAM Assistant
+        if (lower.startsWith('/saldo') || lower === 'saldo' || lower === 'meu saldo') {
+          reply = `⭐ **Saldo da Tesouraria:** Você possui atualmente **${formatNumber(zapStars)} ZapStars** (11 dígitos)! Você tem poderes ilimitados de emissão e apoio.`;
+        } else if (lower.startsWith('/ajuda') || lower.startsWith('/help') || lower === 'ajuda' || lower === 'comandos') {
+          reply = `💡 **Comandos do ZAPGRAM Assistant:**\n• ⭐ **/saldo** - Ver saldo de 11 dígitos da tesouraria\n• 👑 **/fundador** - Detalhes da conta master de Oziel Leite\n• 🎉 **/doar** - Doar 10.000 ZapStars com confetes\n• 🎨 **/logo** - Conhecer a história do ícone híbrido\n• 🌙 **/tema** - Alternar modo escuro e claro\n• 🤖 **Perguntas Livres** - Pode me perguntar QUALQUER COISA: ciência, história, receitas, conselhos ou tecnologia!`;
+        } else if (lower.startsWith('/fundador')) {
+          reply = `👑 **Credenciais do Fundador:**\n• **Idealizador:** Oziel Leite\n• **Cargo:** CEO & Arquiteto Master do ZAPGRAM\n• **Selo:** VIP Estrela de Ouro Vitalícia ⭐\n• **Permissão:** Isenção total de anúncios e faturamento de 50% dos canais!`;
+        } else if (lower.startsWith('/doar')) {
+          sendFounderTip();
+          reply = `🎉 Doação de 10.000 ZapStars enviada com sucesso! Uma chuva de confetes foi disparada na sua tela! ✨`;
+        } else if (lower.startsWith('/logo')) {
+          reply = `🎨 **Identidade Híbrida do ZAPGRAM:**\nO ícone une o balão de fala oficial do WhatsApp desenhado no Azul clássico do Telegram, contendo no interior o aviãozinho de papel do Telegram estilizado no Verde do WhatsApp. O melhor dos dois mundos! 🚀`;
+        } else if (lower.startsWith('/tema')) {
+          toggleTheme();
+          reply = isDarkMode ? "🌙 Modo Noturno ativado com sucesso!" : "☀️ Modo Claro ativado com sucesso!";
+        }
+      } else if (chat.id === 3) { // Duo Coruja
+        if (lower.startsWith('/quiz') || lower === 'quiz') {
+          reply = `🦉 **DUO QUIZ DE INGLÊS:**\nComo se diz "Avião de Papel" em inglês?\n\nA) Paper Airplane\nB) Green Bird\nC) Blue Message\n\n*(Responda digitando apenas A, B ou C!)*`;
+        } else if (lower === 'a' || lower === 'letra a' || lower.includes('paper airplane')) {
+          reply = `🎉 **CORRETO!** 'Paper Airplane' é exatamente o aviãozinho de papel do ZAPGRAM! +25 XP e ofensiva mantida! 🔥🦉`;
+        } else if (lower === 'b' || lower === 'c') {
+          reply = `Quase lá! A resposta correta era a **A) Paper Airplane**. Mas não desista, pratique todo dia! 🦉`;
+        } else if (lower.startsWith('/dica')) {
+          reply = `📖 **Dica de Fluência:** Dedique 10 minutos diários a ouvir conteúdos em áudio. A consistência gera mais resultado do que horas isoladas! 🦉`;
+        }
+      } else if (chat.id === 5) { // TraderBot Nexus
+        if (lower.startsWith('/btc') || lower === 'btc') {
+          reply = `📊 **Bitcoin (BTC/USDT):** $68.750,00 (+4.2% em 24h)\n• Resistência: $70.000\n• Suporte: $66.500\n• Tendência: Alta consistente 🚀`;
+        } else if (lower.startsWith('/eth') || lower === 'eth') {
+          reply = `💎 **Ethereum (ETH/USDT):** $3.620,00 (+3.1% em 24h)\n• Volume 24h: $18.4 bilhões\n• Projeção: Rompimento iminente! 📈`;
+        } else if (lower.startsWith('/sinal') || lower === 'sinal') {
+          reply = `⚡ **SINAL TÉCNICO ZAP-QUANT:**\n• Par: BTC/USDT\n• Ação: **COMPRA FORTE (STRONG BUY)**\n• Entrada: $68.500\n• Alvo 1: $69.800 | Alvo 2: $71.200\n• Stop Loss: $66.800`;
+        } else if (lower.startsWith('/mercado') || lower === 'mercado') {
+          reply = `📈 **Termômetro Global Crypto:**\n• Capitalização Total: $2.64 Trilhões\n• Índice Medo & Ganância: 76 (Ganância Extrema)\n• Dominância BTC: 54.2%`;
+        }
+      } else if (chat.id === 2) {
+        reply = `📢 Atualização recebida pela moderação do canal oficial Nexus Crypto!`;
+      } else if (chat.id === 4) {
+        const devReplies = [
+          "Concordo totalmente com o Fundador Oziel! 💻",
+          "O frontend desse app ficou muito limpo, código de altíssimo nível!",
+          "Essa ideia do ícone híbrido WhatsApp + Telegram ficou sensacional!"
+        ];
+        reply = devReplies[Math.floor(Math.random() * devReplies.length)];
+      }
 
-        let reply = "Mensagem recebida com prioridade de Fundador ⚡!";
-
+      // ================= SE NÃO FOR COMANDO ESPECÍFICO, CONSULTA A IA REAL! =================
+      if (!reply) {
+        let systemPrompt = "";
         if (chat.id === 1) {
-          const lower = userText.toLowerCase();
-          if (lower.includes('oi') || lower.includes('olá')) {
-            reply = "Olá, Fundador Oziel! Sua tesouraria de 11 dígitos está intacta com 10.000.000.000 de ZapStars! 👑";
-          } else if (lower.includes('stars') || lower.includes('estrelas') || lower.includes('saldo')) {
-            reply = `Seu saldo atual de Fundador é exatamente ${formatNumber(zapStars)} ZapStars! Você tem poder total para apoiar e emitir moedas. ⭐`;
-          } else {
-            const zapReplies = [
-              "Diretiva de Fundador processada com sucesso!",
-              "O ecossistema ZAPGRAM está rodando com 100% de estabilidade.",
-              "Com 10 bilhões de ZapStars na tesouraria, o ZAPGRAM está pronto para crescer mundialmente! 🚀",
-              "Sempre pronto para suas ordens, Idealizador!"
-            ];
-            reply = zapReplies[Math.floor(Math.random() * zapReplies.length)];
-          }
-        } else if (chat.id === 2) {
-          reply = "Ordens no mercado cripto continuam em alta volatilidade. 📊";
+          systemPrompt = "Você é o ZAPGRAM Assistant, inteligência artificial avançada e amigável da rede ZAPGRAM, idealizada pelo Fundador Oziel Leite. Responda a qualquer dúvida ou conversa do usuário com muita inteligência, clareza, detalhes e simpatia (como o ChatGPT ou Google Gemini). Se perguntarem sobre o ZAPGRAM, mencione Oziel Leite como Fundador. Responda em português.";
         } else if (chat.id === 3) {
-          reply = "Lembre-se: 5 minutos de prática diária valem mais que 1 hora no fim de semana! 🦉";
+          systemPrompt = "Você é o Duo, a coruja do Duolingo e professor de línguas do ZAPGRAM conversando com Oziel Leite. Ajude a ensinar inglês e espanhol, traduza frases, tire dúvidas gramaticais e converse com entusiasmo e emojis.";
+        } else if (chat.id === 5) {
+          systemPrompt = "Você é o TraderBot Nexus, analista financeiro e de criptomoedas do ZAPGRAM. Explique investimentos, economia, blockchain e finanças com precisão e clareza.";
+        } else {
+          systemPrompt = "Você é um participante ativo do grupo de tecnologia Devs Brasil conversando no ZAPGRAM.";
         }
 
-        const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        chat.messages.push({
-          text: reply,
-          fromMe: false,
-          time: replyTime
-        });
+        reply = await queryAI(systemPrompt, userText);
+      }
 
-        playZapSound('received');
-        saveChats();
-        renderMessages();
-        renderChatList();
-      }, delay);
+      typingIndicator.classList.add('hidden');
+
+      const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      chat.messages.push({
+        text: reply,
+        fromMe: false,
+        time: replyTime
+      });
+
+      playZapSound('received');
+      saveChats();
+      renderMessages();
+      renderChatList();
     }
 
     function handleKeyDown(e) {
@@ -923,12 +1371,17 @@
       renderChatList(val);
     }
 
-    function filterFolder(folder) {
+    function filterFolder(folder, btn) {
       currentFolder = folder;
       document.querySelectorAll('.folder-tab').forEach(t => {
-        t.className = 'folder-tab px-3.5 py-2.5 hover:text-white border-b-2 border-transparent transition whitespace-nowrap text-tg-muted';
+        t.className = 'folder-tab px-3.5 py-2.5 hover:text-gray-900 dark:hover:text-white border-b-2 border-transparent transition whitespace-nowrap text-gray-500 dark:text-tg-muted';
       });
-      event.target.className = 'folder-tab px-3.5 py-2.5 text-teal-400 border-b-2 border-teal-400 transition whitespace-nowrap font-bold';
+      if (btn) {
+        btn.className = 'folder-tab px-3.5 py-2.5 text-teal-600 dark:text-teal-400 border-b-2 border-teal-500 dark:border-teal-400 transition whitespace-nowrap font-bold';
+      } else {
+        const el = document.getElementById('tab-' + folder);
+        if (el) el.className = 'folder-tab px-3.5 py-2.5 text-teal-600 dark:text-teal-400 border-b-2 border-teal-500 dark:border-teal-400 transition whitespace-nowrap font-bold';
+      }
       renderChatList();
     }
 
@@ -964,6 +1417,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      applyTheme();
       updateStarsDisplay();
     });
   </script>
