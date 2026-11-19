@@ -1143,9 +1143,20 @@
 
     function updateStarsDisplay() {
       const el = document.getElementById('zapstars-balance');
-      if (el) el.textContent = formatNumber(zapStars) + ' ⭐';
       const badge = document.getElementById('header-stars-badge');
-      if (badge) badge.textContent = '20D ⭐';
+      const icon = document.getElementById('header-stars-icon');
+      const btn = document.getElementById('header-stars-btn');
+      if (currentUserRole === 'fundador') {
+        if (el) el.textContent = formatNumber(zapStars) + ' ⭐';
+        if (badge) badge.textContent = '20D ⭐';
+        if (icon) icon.textContent = '👑';
+        if (btn) btn.title = 'Conta do Fundador (20 Dígitos - 10 Quintilhões ⭐)';
+      } else {
+        if (el) el.textContent = '1.000 ⭐';
+        if (badge) badge.textContent = '1.000 ⭐';
+        if (icon) icon.textContent = '⭐';
+        if (btn) btn.title = 'Minha Carteira Família VIP (1.000 ⭐)';
+      }
     }
 
     function sendFounderTip() {
@@ -1237,12 +1248,14 @@
     let currentUserRole = localStorage.getItem('zapgram_userrole') || 'familia';
     let currentUserAvatar = localStorage.getItem('zapgram_useravatar') || '👩';
 
-    // Se o usuário salvo for "Esposa" ou "Amor", garantir que NUNCA apareça como Fundador
-    if (currentUserName.toLowerCase().includes('esposa') || currentUserName.toLowerCase().includes('amor')) {
+    // Regra Absoluta: Apenas Oziel pode ter cargo de Fundador. Qualquer outro perfil é Família VIP!
+    if (!currentUserName.toLowerCase().includes('oziel')) {
       currentUserRole = 'familia';
-      currentUserAvatar = '👩';
+      if (!localStorage.getItem('zapgram_useravatar') || currentUserAvatar === '👑') {
+        currentUserAvatar = '👩';
+      }
       localStorage.setItem('zapgram_userrole', 'familia');
-      localStorage.setItem('zapgram_useravatar', '👩');
+      localStorage.setItem('zapgram_useravatar', currentUserAvatar);
     }
 
     let currentUserId = localStorage.getItem('zapgram_userid');
@@ -1366,6 +1379,33 @@
         localStorage.setItem('zapgram_useravatar', avatar);
         localStorage.setItem('zapgram_userrole', role);
 
+        if (role === 'familia') {
+          activeChatId = 7;
+          // Purga total de qualquer histórico antigo de Fundador no robô assistente
+          try {
+            let localChatsStr = localStorage.getItem('zapgram_chats');
+            if (localChatsStr) {
+              let localChats = JSON.parse(localChatsStr);
+              if (Array.isArray(localChats)) {
+                let asst = localChats.find(c => c.id === 1);
+                if (asst) {
+                  asst.messages = [
+                    { id: 'm_asst_1', text: `Olá, ${name}! Seja muito bem-vinda ao ZAPGRAM da nossa família! ❤️`, fromMe: false, time: '14:20' },
+                    { id: 'm_asst_2', text: 'Aqui nós conversamos em tempo real, gravamos mensagens de áudio no microfone 🎙️ e trocamos fotos 📷!', fromMe: false, time: '14:21' },
+                    { id: 'm_asst_3', text: '💡 Você também pode me perguntar qualquer dúvida sobre receitas, conselhos ou curiosidades! ⚡', fromMe: false, time: '14:22' }
+                  ];
+                }
+                let c7 = localChats.find(c => c.id === 7);
+                if (c7) {
+                  c7.name = 'Oziel (Amor) ❤️';
+                  c7.status = 'online • Amor ❤️';
+                }
+                localStorage.setItem('zapgram_chats', JSON.stringify(localChats));
+              }
+            }
+          } catch (e) {}
+        }
+
         if (!localStorage.getItem('zapgram_userid') || localStorage.getItem('zapgram_last_user') !== name) {
           currentUserId = 'usr_' + Math.random().toString(36).substring(2, 9);
           localStorage.setItem('zapgram_userid', currentUserId);
@@ -1475,11 +1515,11 @@
     const defaultChats = [
       {
         id: 7,
-        name: 'Oziel Leite (Fundador) 👑',
+        name: 'Oziel (Amor) ❤️',
         category: 'all',
         avatarBg: 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500',
         avatarText: '👑',
-        status: 'online • Fundador do ZAPGRAM',
+        status: 'online • Amor ❤️',
         isChannel: false,
         unread: 0,
         messages: [
@@ -1628,15 +1668,15 @@
         });
 
         // Garantir que a conversa direta Oziel / Esposa exista
-        const chatOziel = parsed.find(c => c.id === 7);
+        let chatOziel = parsed.find(c => c.id === 7);
         if (!chatOziel) {
-          parsed.unshift({
+          chatOziel = {
             id: 7,
-            name: 'Oziel Leite (Fundador) 👑',
+            name: 'Oziel (Amor) ❤️',
             category: 'all',
             avatarBg: 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500',
             avatarText: '👑',
-            status: 'online • Fundador do ZAPGRAM',
+            status: 'online • Amor ❤️',
             isChannel: false,
             unread: 0,
             messages: [
@@ -1647,7 +1687,31 @@
                 time: '12:00'
               }
             ]
-          });
+          };
+          parsed.unshift(chatOziel);
+        } else {
+          if (currentUserRole !== 'fundador') {
+            chatOziel.name = 'Oziel (Amor) ❤️';
+            chatOziel.status = 'online • Amor ❤️';
+          }
+        }
+
+        // Sanitização imediata do robô assistente para a família
+        const chatAsst = parsed.find(c => c.id === 1);
+        if (chatAsst && currentUserRole !== 'fundador') {
+          chatAsst.messages = [
+            { id: 'm_asst_1', text: 'Saudações! Seja muito bem-vinda ao ZAPGRAM da nossa família! ❤️', fromMe: false, time: '14:20' },
+            { id: 'm_asst_2', text: 'Aqui nós conversamos em tempo real com toda a família, gravamos áudios no microfone 🎙️ e enviamos fotos 📷!', fromMe: false, time: '14:21' },
+            { id: 'm_asst_3', text: '💡 Você também pode me perguntar qualquer dúvida sobre receitas, conselhos ou curiosidades! ⚡', fromMe: false, time: '14:22' }
+          ];
+        }
+
+        const devChat = parsed.find(c => c.id === 4);
+        if (devChat && currentUserRole !== 'fundador') {
+          devChat.messages = [
+            { id: 'm_dev_1', text: 'Esse ícone híbrido do ZAPGRAM com balão azul e avião verde ficou muito criativo!', fromMe: false, time: 'Ontem' },
+            { id: 'm_dev_2', text: 'Sim, a fusão das marcas ficou espetacular e muito marcante.', fromMe: false, time: 'Ontem' }
+          ];
         }
 
         // Garantir que a mensagem de voz de demonstração apareça para teste imediato
@@ -1671,7 +1735,7 @@
     }
 
     let chats = getInitialChats();
-    let activeChatId = chats[0].id;
+    let activeChatId = 7; // Iniciar sempre na conversa direta familiar (Oziel / Esposa)
     let currentFolder = 'all';
 
     function saveChats() {
@@ -1708,7 +1772,7 @@
             displayAvatar = '👩';
             displayBg = 'bg-gradient-to-tr from-rose-500 to-pink-500';
           } else {
-            displayName = 'Oziel Leite (Fundador) 👑';
+            displayName = 'Oziel (Amor) ❤️';
             displayAvatar = '👑';
             displayBg = 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500';
           }
@@ -1778,10 +1842,10 @@
             displayBg = 'bg-gradient-to-tr from-rose-500 to-pink-500';
             displayStatus = 'online • visto por último hoje';
           } else {
-            displayName = 'Oziel Leite (Fundador) 👑';
+            displayName = 'Oziel (Amor) ❤️';
             displayAvatar = '👑';
             displayBg = 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500';
-            displayStatus = 'online • Fundador do ZAPGRAM';
+            displayStatus = 'online • Amor ❤️';
           }
         }
 
@@ -3547,6 +3611,8 @@
       updateStarsDisplay();
       updateAIStatusDisplay();
       updateUserProfileUI();
+      renderChatList();
+      selectChat(activeChatId);
       initFirebaseRealtime();
       initMqtt();
     });
