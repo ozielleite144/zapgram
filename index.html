@@ -12,6 +12,11 @@
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDK e MQTT para Mensagens em Tempo Real Multi-Dispositivo & Família -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -113,9 +118,16 @@
     .dot-1 { animation: typingDot 1.2s infinite ease-in-out 0s; }
     .dot-2 { animation: typingDot 1.2s infinite ease-in-out 0.2s; }
     .dot-3 { animation: typingDot 1.2s infinite ease-in-out 0.4s; }
+
+    /* Ajuste Fino para Telas Mobile (100dvh sem cortes de barra de navegador) */
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overscroll-behavior-y: none;
+    }
   </style>
 </head>
-<body class="bg-tg-bg dark:bg-tg-bg text-gray-900 dark:text-white font-sans h-screen flex flex-col overflow-hidden select-none transition-colors duration-200">
+<body class="bg-tg-bg dark:bg-tg-bg text-gray-900 dark:text-white font-sans h-screen h-[100dvh] flex flex-col overflow-hidden select-none transition-colors duration-200">
 
   <!-- SVG Global Definitions para o Ícone Híbrido (Balão Azul WhatsApp + Avião Verde Telegram) -->
   <svg class="hidden" xmlns="http://www.w3.org/2000/svg">
@@ -155,6 +167,60 @@
 
   <!-- Canvas Invisível para Efeito de Chuva de Confetes 🎉 -->
   <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-[100]"></canvas>
+
+  <!-- Container de Notificações Toast Flutuantes (Notificações ao Vivo no Topo) -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[95] space-y-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- Modal Lightbox para Visualizar Fotos em Tela Cheia -->
+  <div id="modal-image-lightbox" onclick="closeImageLightbox()" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 cursor-zoom-out">
+    <button onclick="closeImageLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center text-lg font-bold transition">✕</button>
+    <img id="lightbox-img" src="" alt="Foto Ampliada" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain border border-white/10" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- Modal de Chamada de Áudio ao Vivo (WhatsApp Voice Call) -->
+  <div id="modal-voice-call" class="hidden fixed inset-0 bg-[#0d141e]/95 backdrop-blur-xl z-[100] flex flex-col items-center justify-between p-8 text-white select-none">
+    <!-- Topo: Criptografia e Indicador -->
+    <div class="flex flex-col items-center gap-1 mt-6 text-center">
+      <span class="text-xs uppercase tracking-widest text-teal-400 font-bold flex items-center gap-1.5">
+        <span>🔒</span> Chamada de Voz ZAPGRAM
+      </span>
+      <h3 id="call-contact-name" class="text-2xl md:text-3xl font-black mt-2">Duo Coruja 🦉</h3>
+      <p id="call-status-label" class="text-sm text-gray-300 font-mono flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+        <span>Chamando...</span>
+      </p>
+    </div>
+
+    <!-- Centro: Avatar com Ondas Sonoras / Pulso -->
+    <div class="relative flex items-center justify-center my-auto">
+      <div id="call-pulse-ring" class="absolute w-44 h-44 rounded-full bg-teal-500/20 animate-ping pointer-events-none"></div>
+      <div id="call-contact-avatar" class="w-32 h-32 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 text-5xl flex items-center justify-center shadow-2xl relative z-10 border-4 border-white/20">
+        🦉
+      </div>
+    </div>
+
+    <!-- Rodapé: Controles da Chamada (Mudo, Viva-Voz, Desligar) -->
+    <div class="w-full max-w-sm flex items-center justify-around mb-8">
+      <!-- Botão Mudo -->
+      <button onclick="toggleCallMute(this)" class="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white flex flex-col items-center justify-center gap-1 text-sm transition active:scale-95" title="Silenciar Microfone">
+        <span class="text-xl">🎤</span>
+        <span class="text-[10px]">Mudo</span>
+      </button>
+
+      <!-- Botão Vermelho de Desligar -->
+      <button onclick="endVoiceCall()" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-3xl shadow-lg shadow-rose-600/40 transition active:scale-90" title="Desligar Chamada">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 rotate-[135deg]" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z" />
+        </svg>
+      </button>
+
+      <!-- Botão Viva-Voz -->
+      <button onclick="toggleCallSpeaker(this)" class="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white flex flex-col items-center justify-center gap-1 text-sm transition active:scale-95" title="Alto-Falante">
+        <span class="text-xl">🔊</span>
+        <span class="text-[10px]">Viva-voz</span>
+      </button>
+    </div>
+  </div>
 
   <!-- ================= TELA DE LOGIN POR QR CODE (ZAPGRAM) ================= -->
   <div id="screen-login" class="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#0a0d14] relative z-50">
@@ -231,32 +297,43 @@
         </div>
       </div>
 
-      <h1 class="text-2xl font-black text-white mt-8 mb-4 tracking-tight">
-        Entrar no <span class="text-teal-400">ZAPGRAM</span> por QR Code
+      <h1 class="text-2xl font-black text-white mt-6 mb-2 tracking-tight">
+        Acesse o <span class="text-teal-400">ZAPGRAM</span>
       </h1>
+      <p class="text-xs text-gray-400 mb-5">Conecte seu celular ou computador à rede da família</p>
 
-      <ol class="text-left text-sm text-gray-400 space-y-2 mb-8 max-w-sm">
-        <li class="flex items-start gap-2.5">
-          <span class="font-bold text-teal-400">1.</span>
-          <span>Abra o <strong>ZAPGRAM</strong> no seu celular</span>
-        </li>
-        <li class="flex items-start gap-2.5">
-          <span class="font-bold text-teal-400">2.</span>
-          <span>Vá em <strong>Configurações</strong> &gt; <strong>Dispositivos</strong> &gt; <strong>Conectar Desktop</strong></span>
-        </li>
-        <li class="flex items-start gap-2.5">
-          <span class="font-bold text-teal-400">3.</span>
-          <span>Aponte seu celular para esta tela para confirmar</span>
-        </li>
-      </ol>
+      <!-- Painel de Identidade do Usuário / Familiar -->
+      <div class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 text-left">
+        <label class="block text-xs font-bold text-gray-300 mb-2">Quem está usando este aparelho?</label>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button type="button" onclick="setLoginProfile('Esposa', '👩', 'familia', this)" class="login-prof-btn p-2.5 rounded-xl border border-teal-400 bg-teal-500/20 text-teal-300 font-bold text-xs flex items-center gap-2 transition">
+            <span>👩</span> Esposa (Família)
+          </button>
+          <button type="button" onclick="setLoginProfile('Oziel Leite', '👑', 'fundador', this)" class="login-prof-btn p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center gap-2 transition">
+            <span>👑</span> Oziel (Fundador)
+          </button>
+          <button type="button" onclick="setLoginProfile('Filho(a)', '👦', 'familia', this)" class="login-prof-btn p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center gap-2 transition">
+            <span>👦</span> Filho(a)
+          </button>
+          <button type="button" onclick="setLoginProfile('Familiar Convidado', '👤', 'familia', this)" class="login-prof-btn p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center gap-2 transition">
+            <span>👤</span> Convidado
+          </button>
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-gray-400 mb-1">Ou digite o nome personalizado:</label>
+          <input 
+            type="text" 
+            id="custom-user-name" 
+            placeholder="Ex: Maria, Lucas, Pedro..." 
+            value="Esposa"
+            class="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-teal-400 transition"
+          >
+        </div>
+      </div>
 
-      <div class="flex flex-col gap-3 w-full">
+      <div class="flex flex-col gap-2.5 w-full">
         <button onclick="performLogin()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-teal-500/25 active:scale-[0.98] transition">
-          ⚡ Escanear e Conectar como Fundador
-        </button>
-
-        <button onclick="alert('Dica: Como este é um app interativo, basta clicar no QR Code ou no botão verde acima para entrar!')" class="py-2.5 text-xs font-bold text-teal-400 hover:text-teal-300 uppercase tracking-wider transition">
-          Entrar com número de telefone
+          ⚡ Entrar no ZAPGRAM
         </button>
       </div>
 
@@ -273,10 +350,10 @@
       <!-- Topo do Perfil do Fundador -->
       <div class="p-5 bg-gradient-to-b from-teal-50 to-white dark:from-[#182a38] dark:to-tg-sidebar border-b border-gray-200 dark:border-tg-border">
         <div class="flex items-center justify-between mb-3">
-          <!-- Avatar 3D com Coroa Dourada -->
+          <!-- Avatar 3D com Emoji Familiar ou Coroa do Fundador -->
           <div class="relative">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500 flex items-center justify-center text-3xl shadow-xl shadow-yellow-500/30 ring-4 ring-yellow-400/40">
-              👑
+            <div id="drawer-user-avatar" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-3xl shadow-xl shadow-pink-500/30 ring-4 ring-rose-400/40">
+              👩
             </div>
             <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white dark:border-tg-sidebar rounded-full flex items-center justify-center text-[10px] text-white font-bold">✓</span>
           </div>
@@ -289,27 +366,27 @@
         </div>
         
         <div class="flex items-center gap-2 mb-0.5">
-          <h3 class="font-black text-base text-gray-900 dark:text-white">Oziel Leite</h3>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-black shadow-sm flex items-center gap-1">
-            👑 FUNDADOR
+          <h3 id="drawer-user-name" class="font-black text-base text-gray-900 dark:text-white">Esposa</h3>
+          <span id="drawer-user-role" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-teal-500 to-emerald-400 text-black shadow-sm flex items-center gap-1">
+            👨‍👩‍👧‍👦 FAMÍLIA VIP
           </span>
           <span id="user-premium-badge" class="text-sm font-bold text-yellow-400 premium-star" title="Membro ZAPGRAM VIP">⭐</span>
         </div>
-        <div class="text-xs text-teal-600 dark:text-teal-400 font-bold font-mono">Idealizador &amp; CEO • @ozielleite</div>
+        <div id="drawer-user-handle" class="text-xs text-teal-600 dark:text-teal-400 font-bold font-mono">Conta Ativa • ZAPGRAM Network</div>
         
-        <!-- Saldo ZapStars de 20 DÍGITOS -->
+        <!-- Saldo ZapStars -->
         <div class="mt-3.5 py-2 px-3 rounded-2xl bg-gradient-to-r from-yellow-500/15 via-amber-500/20 to-transparent border border-yellow-500/40 shadow-sm flex flex-col gap-1.5">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-yellow-500 dark:text-yellow-400 text-lg premium-star">⭐</span>
               <div>
-                <div class="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400/90 tracking-widest">Tesouro do Fundador</div>
-                <div class="text-xs font-bold text-gray-800 dark:text-white">ZapStars (20 Dígitos)</div>
+                <div id="drawer-stars-title" class="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400/90 tracking-widest">Minha Carteira</div>
+                <div id="drawer-stars-subtitle" class="text-xs font-bold text-gray-800 dark:text-white">ZapStars Disponíveis</div>
               </div>
             </div>
-            <span class="text-[10px] bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 font-black px-2 py-0.5 rounded-full border border-yellow-400/30">10 QUINTILHÕES</span>
+            <span id="drawer-stars-tag" class="text-[10px] bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 font-black px-2 py-0.5 rounded-full border border-yellow-400/30">SALDO VIP</span>
           </div>
-          <span id="zapstars-balance" class="text-xs font-black font-mono text-yellow-600 dark:text-yellow-400 tracking-tight text-right select-all">10.000.000.000.000.000.000 ⭐</span>
+          <span id="zapstars-balance" class="text-xs font-black font-mono text-yellow-600 dark:text-yellow-400 tracking-tight text-right select-all">1.000 ⭐</span>
         </div>
       </div>
 
@@ -327,6 +404,17 @@
           <span class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-tg-panel font-bold text-gray-700 dark:text-gray-300">Trocar</span>
         </button>
 
+        <button onclick="requestNotificationPermission()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
+          <div class="flex items-center gap-3.5">
+            <span class="text-xl">🔔</span>
+            <div>
+              <div class="font-bold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition">Notificações no Celular</div>
+              <div id="notif-btn-desc" class="text-xs text-gray-500 dark:text-tg-muted">Ativar sons de alerta e vibração</div>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-1 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/30">Ativar</span>
+        </button>
+
         <button onclick="openPremiumModal()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">⭐</span>
@@ -335,7 +423,7 @@
                 ZAPGRAM Premium
                 <span class="text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black uppercase">VITALÍCIO</span>
               </div>
-              <div class="text-xs text-gray-500 dark:text-tg-muted">Plano Master liberado para o Fundador</div>
+              <div id="drawer-premium-desc" class="text-xs text-gray-500 dark:text-tg-muted">Acesso VIP Família Ativo</div>
             </div>
           </div>
           <span class="text-gray-400 dark:text-tg-muted group-hover:text-gray-900 dark:group-hover:text-white">›</span>
@@ -355,12 +443,12 @@
           <span class="text-xs px-2 py-1 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/30">Config</span>
         </button>
 
-        <button onclick="alert('📢 Painel ZAPGRAM Ads: Como fundador, você tem acesso aos relatórios de faturamento total de todos os anúncios veiculados na rede!')" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="openAdsInfo()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">📢</span>
             <div>
               <div class="font-bold text-gray-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition">ZAPGRAM Ads & Canais</div>
-              <div class="text-xs text-gray-500 dark:text-tg-muted">Gestão de faturamento global de anúncios</div>
+              <div class="text-xs text-gray-500 dark:text-tg-muted">Gestão de canais e anúncios patrocinados</div>
             </div>
           </div>
           <span class="text-gray-400 dark:text-tg-muted">›</span>
@@ -377,7 +465,7 @@
           <span class="text-gray-400 dark:text-tg-muted">›</span>
         </button>
 
-        <button onclick="alert('🏷️ Mercado Fragment ZAPGRAM: Como Idealizador, você possui a custódia de todos os @nomes raros e pode leiloá-los!')" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
+        <button onclick="openFragmentInfo()" class="w-full p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tg-hover flex items-center justify-between text-left group transition">
           <div class="flex items-center gap-3.5">
             <span class="text-xl">🏷️</span>
             <div>
@@ -413,22 +501,22 @@
         </div>
 
         <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-1">ZAPGRAM Premium</h2>
-        <p class="text-xs text-gray-500 dark:text-tg-muted mb-6">Status da Conta do Fundador.</p>
+        <p id="modal-premium-sub" class="text-xs text-gray-500 dark:text-tg-muted mb-6">Status da Conta Família VIP.</p>
 
         <div class="space-y-3 text-left mb-6 font-medium text-xs">
           <div class="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-tg-panel/60 border border-gray-200 dark:border-tg-border">
-            <span class="text-lg">👑</span>
+            <span id="modal-premium-icon1" class="text-lg">⭐</span>
             <div>
-              <div class="font-bold text-gray-900 dark:text-white">Conta Master do Idealizador</div>
-              <div class="text-gray-500 dark:text-tg-muted">Acesso vitalício irrestrito a todas as ferramentas.</div>
+              <div id="modal-premium-title1" class="font-bold text-gray-900 dark:text-white">Plano Família VIP Ativo</div>
+              <div id="modal-premium-desc1" class="text-gray-500 dark:text-tg-muted">Conexão em tempo real e acesso completo aos recursos do ZAPGRAM.</div>
             </div>
           </div>
 
           <div class="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-tg-panel/60 border border-gray-200 dark:border-tg-border">
-            <span class="text-lg">⚡</span>
+            <span id="modal-premium-icon2" class="text-lg">⚡</span>
             <div>
-              <div class="font-bold text-gray-900 dark:text-white">Tesouraria de 20 Dígitos (10 Quintilhões)</div>
-              <div class="text-gray-500 dark:text-tg-muted">10.000.000.000.000.000.000 de ZapStars disponíveis para emitir ou apoiar.</div>
+              <div id="modal-premium-title2" class="font-bold text-gray-900 dark:text-white">Carteira ZapStars Disponível</div>
+              <div id="modal-premium-desc2" class="text-gray-500 dark:text-tg-muted">1.000 ZapStars disponíveis para presentear e apoiar conversas.</div>
             </div>
           </div>
 
@@ -441,8 +529,8 @@
           </div>
         </div>
 
-        <button onclick="triggerConfetti(); closePremiumModal();" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-emerald-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
-          ✓ Status: Fundador Master Ativo
+        <button id="modal-premium-btn" onclick="triggerConfetti(); closePremiumModal();" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-emerald-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition">
+          ✓ Status: Família VIP Ativo
         </button>
       </div>
     </div>
@@ -504,6 +592,73 @@
       </div>
     </div>
 
+    <!-- ================= MODAL NOVO CHAT / CONTATO ================= -->
+    <div id="modal-new-chat" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-tg-sidebar border border-gray-200 dark:border-tg-border rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
+        <button onclick="closeNewChatModal()" class="absolute top-4 right-4 p-1.5 rounded-full text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white">
+          ✕
+        </button>
+
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-3xl shadow-xl shadow-teal-500/30 mb-3 text-white">
+          💬
+        </div>
+
+        <h2 class="text-xl font-black text-gray-900 dark:text-white mb-1">Nova Conversa no ZAPGRAM</h2>
+        <p class="text-xs text-gray-500 dark:text-tg-muted mb-4">Adicione um novo contato, grupo ou canal.</p>
+
+        <div class="space-y-3 mb-5 text-left">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Nome do Contato ou Grupo:</label>
+            <input 
+              type="text" 
+              id="new-chat-name" 
+              placeholder="Ex: Carlos Silva ou Projeto Dev" 
+              class="w-full bg-gray-100 dark:bg-[#141414] border border-gray-300 dark:border-tg-border rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-teal-400 transition"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">@Username ou Telefone (WhatsApp):</label>
+            <input 
+              type="text" 
+              id="new-chat-handle" 
+              placeholder="Ex: @carlos ou +55 62 99999-9999" 
+              class="w-full bg-gray-100 dark:bg-[#141414] border border-gray-300 dark:border-tg-border rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-teal-400 transition font-mono"
+            >
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="selectNewChatCategory('all', this)" class="new-chat-cat-btn py-2 rounded-xl text-xs font-bold border border-teal-500 bg-teal-500/10 text-teal-600 dark:text-teal-400">
+              👤 Contato
+            </button>
+            <button type="button" onclick="selectNewChatCategory('groups', this)" class="new-chat-cat-btn py-2 rounded-xl text-xs font-bold border border-gray-200 dark:border-tg-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tg-panel">
+              👥 Grupo
+            </button>
+            <button type="button" onclick="selectNewChatCategory('channels', this)" class="new-chat-cat-btn py-2 rounded-xl text-xs font-bold border border-gray-200 dark:border-tg-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tg-panel">
+              📢 Canal
+            </button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Escolha o Ícone do Avatar:</label>
+            <div id="avatar-picker" class="flex items-center gap-2 overflow-x-auto py-1">
+              <button type="button" onclick="selectAvatarEmoji('👤', this)" class="avatar-opt w-9 h-9 rounded-full bg-teal-500/20 text-lg flex items-center justify-center border-2 border-teal-500">👤</button>
+              <button type="button" onclick="selectAvatarEmoji('🚀', this)" class="avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent">🚀</button>
+              <button type="button" onclick="selectAvatarEmoji('💼', this)" class="avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent">💼</button>
+              <button type="button" onclick="selectAvatarEmoji('💻', this)" class="avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent">💻</button>
+              <button type="button" onclick="selectAvatarEmoji('🔥', this)" class="avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent">🔥</button>
+              <button type="button" onclick="selectAvatarEmoji('👑', this)" class="avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent">👑</button>
+              <button type="button" onclick="selectAvatarEmoji('⭐', this)" class="avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent">⭐</button>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="createNewChat()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-teal-500/25 active:scale-95 transition">
+          ⚡ Iniciar Conversa
+        </button>
+      </div>
+    </div>
+
     <!-- ================= SIDEBAR LATERAL (LISTA DE CHATS) ================= -->
     <aside id="sidebar" class="w-full md:w-80 lg:w-96 bg-white dark:bg-tg-sidebar border-r border-gray-200 dark:border-tg-border flex flex-col flex-shrink-0 z-10 transition-transform duration-200">
       
@@ -532,16 +687,16 @@
             <span id="header-theme-icon" class="text-base">🌙</span>
           </button>
 
-          <button onclick="toggleMenuDrawer()" title="Conta do Fundador (20 Dígitos - 10 Quintilhões ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-600 dark:text-yellow-400 border border-yellow-400/40 flex items-center gap-1 text-xs font-black transition">
-            <span>👑</span>
-            <span id="header-stars-badge">20D ⭐</span>
+          <button id="header-stars-btn" onclick="toggleMenuDrawer()" title="Minha Carteira Família VIP (1.000 ⭐)" class="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-500/30 text-yellow-600 dark:text-yellow-400 border border-yellow-400/40 flex items-center gap-1 text-xs font-black transition">
+            <span id="header-stars-icon">⭐</span>
+            <span id="header-stars-badge">1.000 ⭐</span>
           </button>
         </div>
       </div>
 
-      <!-- Barra de Pesquisa -->
-      <div class="p-3">
-        <div class="relative">
+      <!-- Barra de Pesquisa & Botão Novo Chat -->
+      <div class="p-3 flex items-center gap-2">
+        <div class="relative flex-1">
           <input 
             type="text" 
             id="search-input" 
@@ -553,6 +708,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
+        <button onclick="openNewChatModal()" class="w-8 h-8 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500 hover:text-black font-extrabold flex items-center justify-center transition border border-teal-500/30 text-lg flex-shrink-0" title="Criar Nova Conversa (+)">
+          +
+        </button>
       </div>
 
       <!-- Abas / Pastas de Conversa -->
@@ -572,8 +730,17 @@
       </div>
 
       <!-- Lista de Contatos / Conversas -->
-      <div id="chat-list" class="flex-1 overflow-y-auto">
+      <div id="chat-list" class="flex-1 overflow-y-auto relative">
         <!-- Inserido dinamicamente via JS -->
+      </div>
+
+      <!-- Botão Flutuante de Nova Conversa (FAB Estilo Telegram) -->
+      <div class="p-3 border-t border-gray-200 dark:border-tg-border/50 flex items-center justify-between bg-gray-50/50 dark:bg-tg-sidebar">
+        <span class="text-[11px] font-bold text-gray-400 dark:text-tg-muted">Rede Conectada</span>
+        <button onclick="openNewChatModal()" class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-600 hover:to-emerald-500 text-black font-extrabold text-xs shadow-md shadow-teal-500/20 active:scale-95 transition flex items-center gap-1.5">
+          <span>✏️</span>
+          <span>Nova Conversa</span>
+        </button>
       </div>
     </aside>
 
@@ -609,9 +776,16 @@
 
         <!-- Ícones de Ação -->
         <div class="flex items-center gap-1 text-gray-600 dark:text-tg-muted">
-          <button onclick="sendFounderTip()" title="Enviar 10.000 ZapStars da Tesouraria do Fundador" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover text-yellow-600 dark:text-yellow-400 transition flex items-center gap-1 text-xs font-black">
+          <!-- Botão de Chamada de Áudio (WhatsApp Voice Call) -->
+          <button onclick="startVoiceCall()" title="Iniciar Chamada de Áudio / Ligação de Voz" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover text-teal-600 dark:text-teal-400 hover:text-teal-700 transition flex items-center justify-center" aria-label="Chamada de Áudio">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+          </button>
+
+          <button id="btn-header-tip" onclick="sendFounderTip()" title="Apoiar com Estrela VIP" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover text-yellow-600 dark:text-yellow-400 transition flex items-center gap-1 text-xs font-black">
             <span class="text-base">⭐</span>
-            <span class="hidden sm:inline">Doar 10.000 ⭐</span>
+            <span class="hidden sm:inline">Apoiar ⭐</span>
           </button>
 
           <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-tg-hover hover:text-gray-900 dark:hover:text-white transition" title="Mais Opções">
@@ -637,20 +811,91 @@
         </span>
       </div>
 
-      <!-- Painel Seletor de Emojis Pop-up -->
-      <div id="emoji-picker" class="hidden absolute bottom-16 left-6 md:left-24 bg-white dark:bg-tg-sidebar border border-gray-200 dark:border-tg-border p-3 rounded-2xl shadow-2xl z-30 grid grid-cols-6 gap-2 text-2xl">
-        <button onclick="insertEmoji('👑')" class="hover:scale-125 transition p-1">👑</button>
-        <button onclick="insertEmoji('⭐')" class="hover:scale-125 transition p-1">⭐</button>
-        <button onclick="insertEmoji('⚡')" class="hover:scale-125 transition p-1">⚡</button>
-        <button onclick="insertEmoji('😀')" class="hover:scale-125 transition p-1">😀</button>
-        <button onclick="insertEmoji('🔥')" class="hover:scale-125 transition p-1">🔥</button>
-        <button onclick="insertEmoji('👍')" class="hover:scale-125 transition p-1">👍</button>
-        <button onclick="insertEmoji('❤️')" class="hover:scale-125 transition p-1">❤️</button>
-        <button onclick="insertEmoji('🎉')" class="hover:scale-125 transition p-1">🎉</button>
-        <button onclick="insertEmoji('🚀')" class="hover:scale-125 transition p-1">🚀</button>
-        <button onclick="insertEmoji('👏')" class="hover:scale-125 transition p-1">👏</button>
-        <button onclick="insertEmoji('😎')" class="hover:scale-125 transition p-1">😎</button>
-        <button onclick="insertEmoji('✨')" class="hover:scale-125 transition p-1">✨</button>
+      <!-- Painel Seletor de Emojis & Figurinhas Pop-up -->
+      <div id="emoji-picker" class="hidden absolute bottom-16 left-4 md:left-24 bg-white dark:bg-tg-sidebar border border-gray-200 dark:border-tg-border rounded-3xl shadow-2xl z-30 w-80 max-w-[90vw] overflow-hidden flex flex-col">
+        <!-- Abas do Seletor: Emojis / Figurinhas -->
+        <div class="flex items-center border-b border-gray-200 dark:border-tg-border bg-gray-50 dark:bg-tg-panel/60 p-1.5 gap-1 text-xs font-bold">
+          <button id="picker-tab-emojis" onclick="switchPickerTab('emojis')" class="flex-1 py-1.5 rounded-xl bg-white dark:bg-tg-sidebar shadow-xs text-teal-600 dark:text-teal-400 font-bold transition flex items-center justify-center gap-1">
+            <span>😄</span> Emojis
+          </button>
+          <button id="picker-tab-stickers" onclick="switchPickerTab('stickers')" class="flex-1 py-1.5 rounded-xl text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition flex items-center justify-center gap-1">
+            <span>🎭</span> Figurinhas
+          </button>
+        </div>
+
+        <!-- Grade de Emojis -->
+        <div id="picker-view-emojis" class="p-3 max-h-56 overflow-y-auto grid grid-cols-6 gap-2 text-2xl text-center">
+          <button onclick="insertEmoji('👑')" class="hover:scale-125 transition p-1">👑</button>
+          <button onclick="insertEmoji('⭐')" class="hover:scale-125 transition p-1">⭐</button>
+          <button onclick="insertEmoji('⚡')" class="hover:scale-125 transition p-1">⚡</button>
+          <button onclick="insertEmoji('🔥')" class="hover:scale-125 transition p-1">🔥</button>
+          <button onclick="insertEmoji('😀')" class="hover:scale-125 transition p-1">😀</button>
+          <button onclick="insertEmoji('😂')" class="hover:scale-125 transition p-1">😂</button>
+          <button onclick="insertEmoji('😍')" class="hover:scale-125 transition p-1">😍</button>
+          <button onclick="insertEmoji('😎')" class="hover:scale-125 transition p-1">😎</button>
+          <button onclick="insertEmoji('👍')" class="hover:scale-125 transition p-1">👍</button>
+          <button onclick="insertEmoji('👏')" class="hover:scale-125 transition p-1">👏</button>
+          <button onclick="insertEmoji('❤️')" class="hover:scale-125 transition p-1">❤️</button>
+          <button onclick="insertEmoji('🎉')" class="hover:scale-125 transition p-1">🎉</button>
+          <button onclick="insertEmoji('🚀')" class="hover:scale-125 transition p-1">🚀</button>
+          <button onclick="insertEmoji('✨')" class="hover:scale-125 transition p-1">✨</button>
+          <button onclick="insertEmoji('🤝')" class="hover:scale-125 transition p-1">🤝</button>
+          <button onclick="insertEmoji('🙏')" class="hover:scale-125 transition p-1">🙏</button>
+          <button onclick="insertEmoji('☕')" class="hover:scale-125 transition p-1">☕</button>
+          <button onclick="insertEmoji('💎')" class="hover:scale-125 transition p-1">💎</button>
+        </div>
+
+        <!-- Grade de Figurinhas / Stickers Grandes -->
+        <div id="picker-view-stickers" class="hidden p-3 max-h-60 overflow-y-auto grid grid-cols-4 gap-3 text-4xl text-center">
+          <button onclick="sendSticker('👑', 'Coroa VIP')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Coroa Real">
+            <span>👑</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">VIP</span>
+          </button>
+          <button onclick="sendSticker('🚀', 'Foguete ZAPGRAM')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Foguete">
+            <span>🚀</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Subindo</span>
+          </button>
+          <button onclick="sendSticker('🔥', 'Fogo Puro')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Fogo">
+            <span>🔥</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Top!</span>
+          </button>
+          <button onclick="sendSticker('🦉', 'Duo Coruja')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Duo Coruja">
+            <span>🦉</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Fluência</span>
+          </button>
+          <button onclick="sendSticker('🤖', 'TraderBot Nexus')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Robô Trader">
+            <span>🤖</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Trader</span>
+          </button>
+          <button onclick="sendSticker('💎', 'Diamante')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Diamante">
+            <span>💎</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Raro</span>
+          </button>
+          <button onclick="sendSticker('🎉', 'Festa')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Comemoração">
+            <span>🎉</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Show!</span>
+          </button>
+          <button onclick="sendSticker('☕', 'Cafézinho')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Café">
+            <span>☕</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Pausa</span>
+          </button>
+          <button onclick="sendSticker('🏆', 'Troféu Campeão')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Campeão">
+            <span>🏆</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Campeão</span>
+          </button>
+          <button onclick="sendSticker('🐶', 'Doguinho')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Cachorrinho">
+            <span>🐶</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Fofura</span>
+          </button>
+          <button onclick="sendSticker('🍕', 'Pizza')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Pizza">
+            <span>🍕</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Bora?</span>
+          </button>
+          <button onclick="sendSticker('🇧🇷', 'Brasil')" class="p-2 rounded-2xl hover:bg-gray-100 dark:hover:bg-tg-panel hover:scale-110 active:scale-90 transition flex flex-col items-center gap-1" title="Brasil">
+            <span>🇧🇷</span>
+            <span class="text-[9px] font-bold text-gray-500 dark:text-tg-muted">Brasil</span>
+          </button>
+        </div>
       </div>
 
       <!-- Barra de Ações Rápidas do ZapBot (Bot Keyboard) -->
@@ -658,10 +903,29 @@
         <!-- Inserido dinamicamente via JS -->
       </div>
 
+      <!-- Barra de Gravação de Áudio ao Vivo (WhatsApp / Telegram) -->
+      <div id="recording-bar" class="hidden px-4 md:px-8 lg:px-24 py-2.5 bg-rose-500/10 dark:bg-rose-950/40 border-t border-rose-500/30 flex items-center justify-between z-10 flex-shrink-0 animate-pulse">
+        <div class="flex items-center gap-3">
+          <span class="w-3.5 h-3.5 rounded-full bg-rose-500 animate-ping"></span>
+          <span class="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+            🎙️ Gravando áudio...
+          </span>
+          <span id="recording-timer" class="font-mono text-sm font-bold text-gray-900 dark:text-white bg-white/60 dark:bg-black/40 px-2 py-0.5 rounded-md">00:00</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="cancelAudioRecording()" class="px-3 py-1 rounded-full bg-gray-200 dark:bg-tg-panel hover:bg-rose-500 hover:text-white text-xs font-bold text-gray-700 dark:text-gray-300 transition flex items-center gap-1">
+            <span>🗑️ Cancelar</span>
+          </button>
+          <button onclick="stopAndSendAudioRecording()" class="px-4 py-1.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-400 text-black font-extrabold text-xs shadow-md shadow-teal-500/30 hover:scale-105 active:scale-95 transition flex items-center gap-1">
+            <span>Enviar Áudio ⬆️</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Input Footer de Envio de Mensagens -->
-      <footer class="p-3 md:px-8 lg:px-24 flex items-center gap-2 bg-transparent z-10 flex-shrink-0">
+      <footer class="p-3 md:px-8 lg:px-24 flex items-center gap-2 bg-transparent z-10 flex-shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div class="flex-1 bg-white dark:bg-tg-sidebar border border-gray-300 dark:border-tg-border rounded-2xl flex items-center px-3 py-1 shadow-md focus-within:border-teal-400 transition">
-          <button onclick="toggleEmojiPicker()" class="p-2 text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition rounded-full" title="Emojis">
+          <button onclick="toggleEmojiPicker()" class="p-2 text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition rounded-full" title="Emojis e Figurinhas">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -671,16 +935,32 @@
             type="text" 
             id="message-input" 
             onkeydown="handleKeyDown(event)"
-            placeholder="Mensagem rápida como Fundador..." 
+            placeholder="Digite uma mensagem..." 
             class="flex-1 bg-transparent py-2.5 px-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-tg-muted text-sm focus:outline-none"
           >
 
-          <button onclick="sendAttachment()" class="p-2 text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition rounded-full" title="Anexar arquivo">
+          <!-- Input oculto para carregar fotos reais da galeria ou câmera do celular -->
+          <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageSelected(event)">
+
+          <button onclick="document.getElementById('image-file-input').click()" class="p-2 text-gray-500 dark:text-tg-muted hover:text-teal-600 dark:hover:text-teal-400 transition rounded-full" title="Enviar Foto da Câmera ou Galeria">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
         </div>
+
+        <!-- Botão de Microfone / Gravação de Áudio NATIVO (Estilo WhatsApp/Telegram) -->
+        <button 
+          id="btn-mic" 
+          onclick="toggleAudioRecording()"
+          class="w-12 h-12 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/30 flex items-center justify-center shadow-md active:scale-95 transition"
+          title="Gravar Mensagem de Áudio (Toque para Iniciar)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+        </button>
 
         <button 
           id="btn-send" 
@@ -869,23 +1149,73 @@
     }
 
     function sendFounderTip() {
-      const tipAmount = 10000n;
-      if (zapStars >= tipAmount) {
-        zapStars -= tipAmount;
-        localStorage.setItem('zapgram_stars_20', zapStars.toString());
-        updateStarsDisplay();
+      if (currentUserRole === 'fundador') {
+        const tipAmount = 10000n;
+        if (zapStars >= tipAmount) {
+          zapStars -= tipAmount;
+          localStorage.setItem('zapgram_stars_20', zapStars.toString());
+          updateStarsDisplay();
+          playZapSound('premium');
+          triggerConfetti();
+          alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars da sua Tesouraria! 🎉\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐ (20 dígitos).`);
+        }
+      } else {
         playZapSound('premium');
         triggerConfetti();
-        alert(`👑 Como Fundador do ZAPGRAM, você doou 10.000 ZapStars da sua Tesouraria! 🎉\nSeu saldo restante ainda é de ${formatNumber(zapStars)} ⭐ (20 dígitos).`);
+        alert(`⭐ Você enviou 50 ZapStars de presente para apoiar a conversa! 🎉`);
       }
     }
 
     function openPremiumModal() {
+      const sub = document.getElementById('modal-premium-sub');
+      const icon1 = document.getElementById('modal-premium-icon1');
+      const title1 = document.getElementById('modal-premium-title1');
+      const desc1 = document.getElementById('modal-premium-desc1');
+      const icon2 = document.getElementById('modal-premium-icon2');
+      const title2 = document.getElementById('modal-premium-title2');
+      const desc2 = document.getElementById('modal-premium-desc2');
+      const btn = document.getElementById('modal-premium-btn');
+
+      if (currentUserRole === 'fundador') {
+        if (sub) sub.textContent = 'Status da Conta do Fundador.';
+        if (icon1) icon1.textContent = '👑';
+        if (title1) title1.textContent = 'Conta Master do Idealizador';
+        if (desc1) desc1.textContent = 'Acesso vitalício irrestrito a todas as ferramentas.';
+        if (icon2) icon2.textContent = '⚡';
+        if (title2) title2.textContent = 'Tesouraria de 20 Dígitos (10 Quintilhões)';
+        if (desc2) desc2.textContent = '10.000.000.000.000.000.000 de ZapStars disponíveis para emitir ou apoiar.';
+        if (btn) btn.textContent = '✓ Status: Fundador Master Ativo';
+      } else {
+        if (sub) sub.textContent = 'Status da Conta Família VIP.';
+        if (icon1) icon1.textContent = '⭐';
+        if (title1) title1.textContent = 'Plano Família VIP Ativo';
+        if (desc1) desc1.textContent = 'Conexão em tempo real e acesso completo aos recursos do ZAPGRAM.';
+        if (icon2) icon2.textContent = '⚡';
+        if (title2) title2.textContent = 'Carteira ZapStars Disponível';
+        if (desc2) desc2.textContent = '1.000 ZapStars disponíveis para presentear e apoiar conversas.';
+        if (btn) btn.textContent = '✓ Status: Família VIP Ativo';
+      }
       document.getElementById('modal-premium').classList.remove('hidden');
     }
 
     function closePremiumModal() {
       document.getElementById('modal-premium').classList.add('hidden');
+    }
+
+    function openAdsInfo() {
+      if (currentUserRole === 'fundador') {
+        alert('📢 Painel ZAPGRAM Ads: Como fundador, você tem acesso aos relatórios de faturamento total de todos os anúncios veiculados na rede!');
+      } else {
+        alert('📢 ZAPGRAM Ads: Sua conta Família VIP possui isenção total de anúncios publicitários!');
+      }
+    }
+
+    function openFragmentInfo() {
+      if (currentUserRole === 'fundador') {
+        alert('🏷️ Mercado Fragment ZAPGRAM: Como Idealizador, você possui a custódia de todos os @nomes raros e pode leiloá-los!');
+      } else {
+        alert('🏷️ Mercado Fragment ZAPGRAM: Coleção exclusiva de @nomes de usuário verificados no ZAPGRAM.');
+      }
     }
 
     function toggleMenuDrawer() {
@@ -902,8 +1232,174 @@
       }
     }
 
+    // ================= DADOS DO USUÁRIO CONECTADO / FAMÍLIA =================
+    let currentUserName = localStorage.getItem('zapgram_username') || 'Esposa';
+    let currentUserRole = localStorage.getItem('zapgram_userrole') || 'familia';
+    let currentUserAvatar = localStorage.getItem('zapgram_useravatar') || '👩';
+
+    // Se o usuário salvo for "Esposa" ou "Amor", garantir que NUNCA apareça como Fundador
+    if (currentUserName.toLowerCase().includes('esposa') || currentUserName.toLowerCase().includes('amor')) {
+      currentUserRole = 'familia';
+      currentUserAvatar = '👩';
+      localStorage.setItem('zapgram_userrole', 'familia');
+      localStorage.setItem('zapgram_useravatar', '👩');
+    }
+
+    let currentUserId = localStorage.getItem('zapgram_userid');
+    if (!currentUserId) {
+      currentUserId = 'usr_' + Math.random().toString(36).substring(2, 9);
+      localStorage.setItem('zapgram_userid', currentUserId);
+    }
+
+    function setLoginProfile(name, avatar, role, btn) {
+      currentUserName = name;
+      currentUserAvatar = avatar;
+      currentUserRole = role;
+      const customInput = document.getElementById('custom-user-name');
+      if (customInput) customInput.value = name;
+
+      document.querySelectorAll('.login-prof-btn').forEach(b => {
+        b.className = 'login-prof-btn p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs flex items-center gap-2 transition';
+      });
+      if (btn) {
+        btn.className = 'login-prof-btn p-2.5 rounded-xl border border-teal-400 bg-teal-500/20 text-teal-300 font-bold text-xs flex items-center gap-2 transition';
+      }
+    }
+
+    function updateUserProfileUI() {
+      const nameEl = document.getElementById('drawer-user-name');
+      if (nameEl) nameEl.textContent = currentUserName;
+      const avatarEl = document.getElementById('drawer-user-avatar');
+      if (avatarEl) avatarEl.textContent = currentUserAvatar;
+      const roleEl = document.getElementById('drawer-user-role');
+      const starsTitle = document.getElementById('drawer-stars-title');
+      const starsSubtitle = document.getElementById('drawer-stars-subtitle');
+      const starsTag = document.getElementById('drawer-stars-tag');
+      const balanceEl = document.getElementById('zapstars-balance');
+      const headerStarsBadge = document.getElementById('header-stars-badge');
+      const headerStarsBtn = document.getElementById('header-stars-btn');
+      const headerStarsIcon = document.getElementById('header-stars-icon');
+      const drawerPremiumDesc = document.getElementById('drawer-premium-desc');
+      const messageInput = document.getElementById('message-input');
+      const tipBtn = document.getElementById('btn-header-tip') || document.querySelector('button[onclick="sendFounderTip()"]');
+
+      if (currentUserRole === 'fundador') {
+        if (avatarEl) {
+          avatarEl.className = 'w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500 flex items-center justify-center text-3xl shadow-xl shadow-yellow-500/30 ring-4 ring-yellow-400/40';
+        }
+        if (roleEl) {
+          roleEl.textContent = '👑 FUNDADOR';
+          roleEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-black shadow-sm flex items-center gap-1';
+        }
+        if (starsTitle) starsTitle.textContent = 'Tesouro do Fundador';
+        if (starsSubtitle) starsSubtitle.textContent = 'ZapStars (20 Dígitos)';
+        if (starsTag) starsTag.textContent = '10 QUINTILHÕES';
+        if (balanceEl) balanceEl.textContent = formatNumber(zapStars) + ' ⭐';
+        if (headerStarsBadge) headerStarsBadge.textContent = '20D ⭐';
+        if (headerStarsIcon) headerStarsIcon.textContent = '👑';
+        if (headerStarsBtn) headerStarsBtn.title = 'Conta do Fundador (20 Dígitos - 10 Quintilhões ⭐)';
+        if (drawerPremiumDesc) drawerPremiumDesc.textContent = 'Plano Master liberado para o Fundador';
+        if (messageInput) messageInput.placeholder = 'Mensagem rápida como Fundador...';
+        if (tipBtn) {
+          tipBtn.title = 'Enviar 10.000 ZapStars da Tesouraria do Fundador';
+          tipBtn.innerHTML = '<span class="text-base">⭐</span><span class="hidden sm:inline">10.000 ⭐</span>';
+        }
+      } else {
+        if (avatarEl) {
+          avatarEl.className = 'w-16 h-16 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-3xl shadow-xl shadow-pink-500/30 ring-4 ring-rose-400/40';
+        }
+        if (roleEl) {
+          roleEl.textContent = '👨‍👩‍👧‍👦 FAMÍLIA VIP';
+          roleEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-teal-500 to-emerald-400 text-black shadow-sm flex items-center gap-1';
+        }
+        if (starsTitle) starsTitle.textContent = 'Minha Carteira';
+        if (starsSubtitle) starsSubtitle.textContent = 'ZapStars Disponíveis';
+        if (starsTag) starsTag.textContent = 'SALDO VIP';
+        if (balanceEl) balanceEl.textContent = '1.000 ⭐';
+        if (headerStarsBadge) headerStarsBadge.textContent = '1.000 ⭐';
+        if (headerStarsIcon) headerStarsIcon.textContent = '⭐';
+        if (headerStarsBtn) headerStarsBtn.title = 'Minha Carteira Família VIP (1.000 ⭐)';
+        if (drawerPremiumDesc) drawerPremiumDesc.textContent = 'Acesso VIP Família Ativo';
+        if (messageInput) messageInput.placeholder = 'Digite uma mensagem...';
+        if (tipBtn) {
+          tipBtn.title = 'Apoiar com Estrela VIP';
+          tipBtn.innerHTML = '<span class="text-base">⭐</span><span class="hidden sm:inline">Apoiar ⭐</span>';
+        }
+      }
+    }
+
+    function checkUrlLoginParams() {
+      const params = new URLSearchParams(window.location.search);
+      const userParam = params.get('user') || params.get('usuario') || params.get('nome') || params.get('convidado') || params.get('perfil');
+
+      if (userParam) {
+        let name = decodeURIComponent(userParam).trim();
+        let avatar = '👤';
+        let role = 'familia';
+
+        const low = userParam.toLowerCase().trim();
+        if (low === 'oziel' || low === 'fundador' || low === 'admin' || low === 'master') {
+          name = 'Oziel Leite';
+          avatar = '👑';
+          role = 'fundador';
+        } else if (low === 'esposa' || low === 'amor' || low === 'mae' || low === 'mãe') {
+          name = 'Esposa';
+          avatar = '👩';
+          role = 'familia';
+        } else if (low === 'filho') {
+          name = 'Filho';
+          avatar = '👦';
+          role = 'familia';
+        } else if (low === 'filha') {
+          name = 'Filha';
+          avatar = '👧';
+          role = 'familia';
+        } else if (params.get('avatar')) {
+          avatar = params.get('avatar');
+        }
+
+        currentUserName = name;
+        currentUserAvatar = avatar;
+        currentUserRole = role;
+
+        localStorage.setItem('zapgram_username', name);
+        localStorage.setItem('zapgram_useravatar', avatar);
+        localStorage.setItem('zapgram_userrole', role);
+
+        if (!localStorage.getItem('zapgram_userid') || localStorage.getItem('zapgram_last_user') !== name) {
+          currentUserId = 'usr_' + Math.random().toString(36).substring(2, 9);
+          localStorage.setItem('zapgram_userid', currentUserId);
+          localStorage.setItem('zapgram_last_user', name);
+        }
+
+        // Entrar direto sem passar pela tela de login
+        const screenLogin = document.getElementById('screen-login');
+        const screenApp = document.getElementById('screen-app');
+        if (screenLogin && screenApp) {
+          screenLogin.classList.add('hidden');
+          screenApp.classList.remove('hidden');
+        }
+      }
+    }
+
     // ================= FLUXO DE LOGIN / LOGOUT =================
     function performLogin() {
+      const customInput = document.getElementById('custom-user-name');
+      if (customInput && customInput.value.trim()) {
+        currentUserName = customInput.value.trim();
+      }
+      if (currentUserName.toLowerCase().includes('esposa') || currentUserName.toLowerCase().includes('amor')) {
+        currentUserRole = 'familia';
+        currentUserAvatar = '👩';
+      } else if (currentUserName.toLowerCase().includes('oziel')) {
+        currentUserRole = 'fundador';
+        currentUserAvatar = '👑';
+      }
+      localStorage.setItem('zapgram_username', currentUserName);
+      localStorage.setItem('zapgram_userrole', currentUserRole);
+      localStorage.setItem('zapgram_useravatar', currentUserAvatar);
+      updateUserProfileUI();
+
       const overlay = document.getElementById('qr-success-overlay');
       overlay.classList.remove('hidden');
       playZapSound('login');
@@ -916,11 +1412,12 @@
         renderChatList();
         selectChat(activeChatId);
         updateStarsDisplay();
+        initMqtt();
       }, 700);
     }
 
     function performLogout() {
-      if (confirm('Deseja realmente desconectar e voltar para a tela de QR Code do ZAPGRAM?')) {
+      if (confirm('Deseja realmente desconectar e voltar para a tela de login do ZAPGRAM?')) {
         toggleMenuDrawer();
         document.getElementById('qr-success-overlay').classList.add('hidden');
         document.getElementById('screen-app').classList.add('hidden');
@@ -928,8 +1425,100 @@
       }
     }
 
+    // ================= GERADOR DE ÁUDIO UNIVERSAL (WAV SINTÉTICO) =================
+    function createSyntheticVoiceWav() {
+      try {
+        const sampleRate = 16000;
+        const numSamples = sampleRate * 2.5; // 2.5 segundos
+        const buffer = new ArrayBuffer(44 + numSamples * 2);
+        const view = new DataView(buffer);
+
+        function writeString(offset, str) {
+          for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+        }
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + numSamples * 2, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, 1, true); // Mono
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, 'data');
+        view.setUint32(40, numSamples * 2, true);
+
+        // Melodia harmônica agradável de voz de estúdio
+        for (let i = 0; i < numSamples; i++) {
+          const t = i / sampleRate;
+          const freq = t < 0.6 ? 440 : (t < 1.2 ? 554.37 : (t < 1.8 ? 659.25 : 880));
+          const envelope = Math.sin((t % 0.6) / 0.6 * Math.PI);
+          const sample = Math.sin(2 * Math.PI * freq * t) * envelope * 0.3;
+          view.setInt16(44 + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        }
+
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return 'data:audio/wav;base64,' + btoa(binary);
+      } catch (e) {
+        return '';
+      }
+    }
+
     // ================= DADOS E CONTATOS DO ZAPGRAM =================
     const defaultChats = [
+      {
+        id: 7,
+        name: 'Oziel Leite (Fundador) 👑',
+        category: 'all',
+        avatarBg: 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500',
+        avatarText: '👑',
+        status: 'online • Fundador do ZAPGRAM',
+        isChannel: false,
+        unread: 0,
+        messages: [
+          {
+            id: 'm_oziel_init',
+            text: 'Oi amor! Bem-vinda ao ZAPGRAM! Aqui a gente conversa em tempo real, troca mensagens de texto, grava áudios no microfone 🎙️ e manda fotos 📷! ❤️',
+            fromMe: false,
+            time: '12:00'
+          }
+        ]
+      },
+      {
+        id: 100,
+        name: 'Família Leite 👨‍👩‍👧‍👦',
+        category: 'groups',
+        avatarBg: 'bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500',
+        avatarText: '🏡',
+        status: 'grupo da família • online',
+        isChannel: false,
+        unread: 0,
+        messages: [
+          { id: 'm_fam_1', senderName: 'ZAPGRAM', text: '🏡 Bem-vindos ao Grupo Oficial da Família no ZAPGRAM!', fromMe: false, time: '12:00' },
+          { id: 'm_fam_2', senderName: 'ZAPGRAM', text: 'Todos os celulares da família conectados trocam mensagens e áudios de voz aqui em tempo real! 👨‍👩‍👧‍👦🎙️', fromMe: false, time: '12:01' }
+        ]
+      },
+      {
+        id: 99,
+        name: 'Rede Global ZAPGRAM 🌐',
+        category: 'groups',
+        avatarBg: 'bg-gradient-to-tr from-blue-600 via-teal-500 to-emerald-400',
+        avatarText: '🌐',
+        status: 'sala pública ao vivo • online',
+        isChannel: false,
+        unread: 0,
+        messages: [
+          { id: 'm_glob_1', text: '🌐 Bem-vindo à Sala Global do ZAPGRAM!', fromMe: false, time: '12:00' },
+          { id: 'm_glob_2', text: 'Esta sala conecta múltiplos usuários e abas em tempo real! Você pode enviar mensagens de texto e áudios de voz gravados pelo microfone! 🎙️🚀', fromMe: false, time: '12:01' }
+        ]
+      },
       {
         id: 1,
         name: 'ZAPGRAM Assistant ⚡',
@@ -940,9 +1529,23 @@
         isChannel: false,
         unread: 0,
         messages: [
-          { text: 'Saudações, Oziel! Seja bem-vindo ao ZAPGRAM como Idealizador e Fundador!', fromMe: false, time: '14:20' },
-          { text: 'O novo ícone híbrido oficial (Balão do WhatsApp Azul + Aviãozinho do Telegram Verde) já está ativo no logotipo do app! 🚀', fromMe: false, time: '14:21' },
-          { text: '💡 Dica: Você pode digitar qualquer mensagem, fazer contas, ou clicar nos botões rápidos abaixo como /saldo, /ajuda ou /doar!', fromMe: false, time: '14:22' }
+          { id: 'm_asst_1', text: 'Saudações! Seja muito bem-vindo(a) ao ZAPGRAM!', fromMe: false, time: '14:20' },
+          { id: 'm_asst_2', text: 'O novo ícone híbrido oficial (Balão do WhatsApp Azul + Aviãozinho do Telegram Verde) já está ativo no logotipo do app! 🚀', fromMe: false, time: '14:21' },
+          { id: 'm_asst_3', text: '💡 Dica: Você pode digitar qualquer mensagem, fazer contas, ou clicar nos botões rápidos abaixo como /saldo, /ajuda ou /doar!', fromMe: false, time: '14:22' }
+        ]
+      },
+      {
+        id: 6,
+        name: 'Carlos Silva (Dev) 📱',
+        category: 'all',
+        avatarBg: 'bg-gradient-to-tr from-indigo-500 to-purple-500',
+        avatarText: '👤',
+        status: 'online • visto por último há 5 min',
+        isChannel: false,
+        unread: 1,
+        messages: [
+          { id: 'm_carlos_1', text: 'Olá! Testei o gravador de áudio do ZAPGRAM e ficou idêntico ao do WhatsApp e Telegram! Ouça a gravação de voz abaixo: 🎙️👇', fromMe: false, time: '13:40' },
+          { id: 'm_carlos_aud_1', text: '🎙️ Mensagem de voz de demonstração', isAudio: true, audioUrl: createSyntheticVoiceWav(), duration: '0:03', fromMe: false, time: '13:41' }
         ]
       },
       {
@@ -955,7 +1558,7 @@
         isChannel: false,
         unread: 1,
         messages: [
-          { text: 'Hi Oziel! Pronto para treinar seu inglês hoje? Me mande um "Hello" ou clique em /quiz! 🔥', fromMe: false, time: '12:15' }
+          { id: 'm_duo_1', text: 'Hello! Pronto para treinar línguas hoje? Me mande um "Hello" ou clique em /quiz! 🔥', fromMe: false, time: '12:15' }
         ]
       },
       {
@@ -968,7 +1571,7 @@
         isChannel: false,
         unread: 1,
         messages: [
-          { text: '🤖 Olá! Sou o bot analista de mercado. Clique em /btc ou /sinal para relatórios em tempo real!', fromMe: false, time: '10:30' }
+          { id: 'm_trade_1', text: '🤖 Olá! Sou o bot analista de mercado. Clique em /btc ou /sinal para relatórios em tempo real!', fromMe: false, time: '10:30' }
         ]
       },
       {
@@ -981,8 +1584,8 @@
         isChannel: true,
         unread: 2,
         messages: [
-          { text: '🚨 ALERTA: Bitcoin rompeu a resistência e superou os $68.000 USDT!', fromMe: false, time: '09:42' },
-          { text: 'Confira as posições no seu simulador de corretora. 🚀', fromMe: false, time: '09:43' }
+          { id: 'm_nex_1', text: '🚨 ALERTA: Bitcoin rompeu a resistência e superou os $68.000 USDT!', fromMe: false, time: '09:42' },
+          { id: 'm_nex_2', text: 'Confira as posições no seu simulador de corretora. 🚀', fromMe: false, time: '09:43' }
         ]
       },
       {
@@ -995,8 +1598,8 @@
         isChannel: false,
         unread: 0,
         messages: [
-          { text: 'Esse ícone híbrido do ZAPGRAM com balão azul e avião verde ficou muito criativo!', fromMe: false, time: 'Ontem' },
-          { text: 'Sim, a fusão das marcas ficou espetacular e muito marcante.', fromMe: true, time: 'Ontem' }
+          { id: 'm_dev_1', text: 'Esse ícone híbrido do ZAPGRAM com balão azul e avião verde ficou muito criativo!', fromMe: false, time: 'Ontem' },
+          { id: 'm_dev_2', text: 'Sim, a fusão das marcas ficou espetacular e muito marcante.', fromMe: true, time: 'Ontem' }
         ]
       }
     ];
@@ -1023,6 +1626,44 @@
             }
           }
         });
+
+        // Garantir que a conversa direta Oziel / Esposa exista
+        const chatOziel = parsed.find(c => c.id === 7);
+        if (!chatOziel) {
+          parsed.unshift({
+            id: 7,
+            name: 'Oziel Leite (Fundador) 👑',
+            category: 'all',
+            avatarBg: 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500',
+            avatarText: '👑',
+            status: 'online • Fundador do ZAPGRAM',
+            isChannel: false,
+            unread: 0,
+            messages: [
+              {
+                id: 'm_oziel_init',
+                text: 'Oi amor! Bem-vinda ao ZAPGRAM! Aqui a gente conversa em tempo real, troca mensagens de texto, grava áudios no microfone 🎙️ e manda fotos 📷! ❤️',
+                fromMe: false,
+                time: '12:00'
+              }
+            ]
+          });
+        }
+
+        // Garantir que a mensagem de voz de demonstração apareça para teste imediato
+        const carlos = parsed.find(c => c.id === 6);
+        if (carlos && !carlos.messages.some(m => m.isAudio)) {
+          carlos.messages.push({
+            id: 'm_carlos_aud_demo',
+            text: '🎙️ Mensagem de voz de demonstração',
+            isAudio: true,
+            audioUrl: createSyntheticVoiceWav(),
+            duration: '0:03',
+            fromMe: false,
+            time: '13:41'
+          });
+        }
+
         return parsed;
       } catch (e) {
         return defaultChats;
@@ -1057,6 +1698,22 @@
         const lastMsg = chat.messages[chat.messages.length - 1];
         const isActive = chat.id === activeChatId;
 
+        let displayName = chat.name;
+        let displayAvatar = chat.avatarText;
+        let displayBg = chat.avatarBg;
+
+        if (chat.id === 7) {
+          if (currentUserRole === 'fundador' || currentUserName.toLowerCase().includes('oziel')) {
+            displayName = 'Esposa / Amor ❤️';
+            displayAvatar = '👩';
+            displayBg = 'bg-gradient-to-tr from-rose-500 to-pink-500';
+          } else {
+            displayName = 'Oziel Leite (Fundador) 👑';
+            displayAvatar = '👑';
+            displayBg = 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500';
+          }
+        }
+
         const div = document.createElement('div');
         div.className = `p-3 flex items-center gap-3 cursor-pointer transition ${
           isActive 
@@ -1065,7 +1722,7 @@
         }`;
         div.onclick = () => selectChat(chat.id);
 
-        let avatarHtml = `<div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0 ${chat.avatarBg}">${chat.avatarText}</div>`;
+        let avatarHtml = `<div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-sm flex-shrink-0 ${displayBg}">${displayAvatar}</div>`;
         if (chat.id === 1) {
           avatarHtml = `
             <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 p-1">
@@ -1084,7 +1741,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-baseline mb-1">
               <div class="flex items-center gap-1.5 truncate">
-                <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate">${chat.name}</h3>
+                <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate">${displayName}</h3>
                 ${chat.category === 'channels' ? '<span class="text-xs text-gray-400">📢</span>' : ''}
                 ${chat.category === 'bots' ? '<span class="text-[10px] bg-teal-500/20 text-teal-600 dark:text-teal-400 font-bold px-1.5 py-0.2 rounded">BOT</span>' : ''}
               </div>
@@ -1109,8 +1766,27 @@
         chat.unread = 0;
         saveChats();
 
-        document.getElementById('active-name').textContent = chat.name;
-        document.getElementById('active-status').textContent = chat.status;
+        let displayName = chat.name;
+        let displayStatus = chat.status;
+        let displayAvatar = chat.avatarText;
+        let displayBg = chat.avatarBg;
+
+        if (chat.id === 7) {
+          if (currentUserRole === 'fundador' || currentUserName.toLowerCase().includes('oziel')) {
+            displayName = 'Esposa / Amor ❤️';
+            displayAvatar = '👩';
+            displayBg = 'bg-gradient-to-tr from-rose-500 to-pink-500';
+            displayStatus = 'online • visto por último hoje';
+          } else {
+            displayName = 'Oziel Leite (Fundador) 👑';
+            displayAvatar = '👑';
+            displayBg = 'bg-gradient-to-tr from-amber-400 via-yellow-400 to-orange-500';
+            displayStatus = 'online • Fundador do ZAPGRAM';
+          }
+        }
+
+        document.getElementById('active-name').textContent = displayName;
+        document.getElementById('active-status').textContent = displayStatus;
 
         // Atualizar avatar dinamicamente no cabeçalho
         const avatarEl = document.getElementById('active-avatar');
@@ -1118,8 +1794,8 @@
           avatarEl.className = 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 p-1';
           avatarEl.innerHTML = '<svg class="w-full h-full" viewBox="0 0 100 100"><use href="#zapgram-hybrid-icon" /></svg>';
         } else {
-          avatarEl.className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-md flex-shrink-0 ${chat.avatarBg}`;
-          avatarEl.innerHTML = chat.avatarText;
+          avatarEl.className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-md flex-shrink-0 ${displayBg}`;
+          avatarEl.innerHTML = displayAvatar;
         }
 
         renderBotKeyboard(chat.id);
@@ -1139,27 +1815,54 @@
 
       let buttons = [];
       if (chatId === 1) {
-        buttons = [
-          { label: '⭐ Saldo do Fundador', cmd: '/saldo' },
-          { label: '💡 Comandos', cmd: '/ajuda' },
-          { label: '👑 Status Master', cmd: '/fundador' },
-          { label: '🎉 Doar 10.000 ⭐', cmd: '/doar' },
-          { label: '🎨 Logo Híbrido', cmd: '/logo' },
-          { label: '🌙 Alternar Tema', cmd: '/tema' }
-        ];
+        if (currentUserRole === 'fundador') {
+          buttons = [
+            { label: '⭐ Saldo do Fundador', cmd: '/saldo' },
+            { label: '💡 Comandos', cmd: '/ajuda' },
+            { label: '👑 Status Master', cmd: '/fundador' },
+            { label: '🎉 Doar 10.000 ⭐', cmd: '/doar' },
+            { label: '🎨 Logo Híbrido', cmd: '/logo' },
+            { label: '🌙 Alternar Tema', cmd: '/tema' }
+          ];
+        } else {
+          buttons = [
+            { label: '⭐ Carteira VIP', cmd: '/saldo' },
+            { label: '💡 Comandos', cmd: '/ajuda' },
+            { label: '👨‍👩‍👧‍👦 Família VIP', cmd: '/perfil' },
+            { label: '🎁 Apoiar com ⭐', cmd: '/doar' },
+            { label: '🎨 Logo Híbrido', cmd: '/logo' },
+            { label: '🌙 Alternar Tema', cmd: '/tema' }
+          ];
+        }
       } else if (chatId === 3) {
-        buttons = [
-          { label: '🦉 Fazer Quiz', cmd: '/quiz' },
-          { label: '🇺🇸 Treinar Inglês', cmd: 'Hello Duo! How are you today?' },
-          { label: '🇪🇸 Treinar Espanhol', cmd: '¡Hola Duo! ¿Cómo estás?' },
-          { label: '📖 Dica de Estudo', cmd: '/dica' }
-        ];
+        if (typeof duoState !== 'undefined' && duoState.inQuiz) {
+          buttons = [
+            { label: '🅰️ Opção A', cmd: 'A' },
+            { label: '🅱️ Opção B', cmd: 'B' },
+            { label: '🅲 Opção C', cmd: 'C' },
+            { label: '🦉 Próximo Desafio', cmd: '/quiz' },
+            { label: '🔥 Meu XP & Nível', cmd: '/status' }
+          ];
+        } else {
+          buttons = [
+            { label: '🦉 Fazer Quiz', cmd: '/quiz' },
+            { label: '🔥 Meu XP & Nível', cmd: '/status' },
+            { label: '🇺🇸 Treinar Inglês', cmd: 'Hello Duo! How are you today?' },
+            { label: '🇪🇸 Treinar Espanhol', cmd: '¡Hola Duo! ¿Cómo estás?' },
+            { label: '📖 Dica de Estudo', cmd: '/dica' }
+          ];
+        }
       } else if (chatId === 5) {
         buttons = [
           { label: '📊 Preço BTC', cmd: '/btc' },
           { label: '💎 Preço ETH', cmd: '/eth' },
-          { label: '⚡ Sinal Técnico', cmd: '/sinal' },
-          { label: '📈 Notícias do Mercado', cmd: '/mercado' }
+          { label: '⚡ Preço SOL', cmd: '/sol' },
+          { label: '🟡 Preço BNB', cmd: '/bnb' },
+          { label: '🎯 Sinal Zap-Quant', cmd: '/sinal' },
+          { label: '📈 Visão de Mercado', cmd: '/mercado' },
+          { label: '📰 Notícias Quentes', cmd: '/noticias' },
+          { label: '💼 Carteira Simulada', cmd: '/carteira' },
+          { label: '💡 Dica de Trader', cmd: '/dica' }
         ];
       }
 
@@ -1206,23 +1909,133 @@
         const bubble = document.createElement('div');
         bubble.className = `flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`;
 
-        bubble.innerHTML = `
-          <div class="max-w-[75%] md:max-w-[60%] rounded-2xl px-4 py-2.5 shadow-sm text-sm relative break-words ${
-            msg.fromMe 
-              ? 'bg-gradient-to-r from-[#0284c7] via-[#229ED9] to-[#10b981] text-white rounded-br-xs shadow-md' 
-              : 'bg-white dark:bg-tg-bubbleIn text-gray-800 dark:text-gray-100 rounded-bl-xs border border-gray-200/50 dark:border-transparent'
-          }">
-            <div class="mb-1 leading-relaxed whitespace-pre-line">${formatMessageText(msg.text)}</div>
-            <div class="flex items-center justify-end gap-1 text-[10px] ${msg.fromMe ? 'text-white/90' : 'text-gray-400 dark:text-white/60'} font-mono -mb-0.5">
-              <span>${msg.time}</span>
-              ${msg.fromMe ? '<span class="text-emerald-200 font-bold">✓✓</span>' : ''}
+        const senderHeader = (!msg.fromMe && (chat.category === 'groups' || msg.senderName))
+          ? `<div class="text-[11px] font-bold text-teal-600 dark:text-teal-400 mb-1 flex items-center gap-1"><span>👤</span><span>${msg.senderName || chat.name}</span></div>`
+          : '';
+
+        if (msg.isSticker) {
+          bubble.innerHTML = `
+            <div class="p-1 flex flex-col ${msg.fromMe ? 'items-end' : 'items-start'}">
+              ${senderHeader}
+              <div class="text-7xl md:text-8xl p-1 hover:scale-110 active:scale-95 transition-transform duration-200 cursor-pointer select-none drop-shadow-md" title="${msg.stickerLabel || 'Figurinha ZAPGRAM'}">
+                ${msg.sticker}
+              </div>
+              <div class="text-[10px] font-mono text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                <span>${msg.time}</span>
+                ${msg.fromMe ? '<span class="text-teal-400 font-bold">✓✓</span>' : ''}
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        } else if (msg.isImage) {
+          bubble.innerHTML = `
+            <div class="max-w-[80%] sm:max-w-[65%] md:max-w-[48%] rounded-2xl p-1.5 shadow-md text-sm relative break-words ${
+              msg.fromMe 
+                ? 'bg-gradient-to-r from-[#0284c7] via-[#229ED9] to-[#10b981] text-white rounded-br-xs' 
+                : 'bg-white dark:bg-tg-bubbleIn text-gray-800 dark:text-gray-100 rounded-bl-xs border border-gray-200/50 dark:border-transparent'
+            }">
+              ${senderHeader ? `<div class="px-2 pt-1">${senderHeader}</div>` : ''}
+              <div class="relative overflow-hidden rounded-xl cursor-pointer group" onclick="openImageLightbox('${msg.imageUrl}')" title="Toque para ver em tela cheia">
+                <img src="${msg.imageUrl}" alt="Foto" class="w-full h-auto max-h-80 object-cover rounded-xl group-hover:scale-102 transition duration-200" loading="lazy">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <span class="p-2 rounded-full bg-black/60 text-white text-xs font-bold">🔍 Ampliar Foto</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-end gap-1 text-[10px] ${msg.fromMe ? 'text-white/90' : 'text-gray-400 dark:text-white/60'} font-mono mt-1 px-1">
+                <span>${msg.time}</span>
+                ${msg.fromMe ? '<span class="text-emerald-200 font-bold">✓✓</span>' : ''}
+              </div>
+            </div>
+          `;
+        } else if (msg.isAudio) {
+          bubble.innerHTML = `
+            <div class="max-w-[85%] sm:max-w-[70%] md:max-w-[55%] rounded-2xl p-3 shadow-md text-sm relative break-words ${
+              msg.fromMe 
+                ? 'bg-gradient-to-r from-[#0284c7] via-[#229ED9] to-[#10b981] text-white rounded-br-xs' 
+                : 'bg-white dark:bg-tg-bubbleIn text-gray-800 dark:text-gray-100 rounded-bl-xs border border-gray-200/50 dark:border-transparent'
+            }">
+              ${senderHeader}
+              <div class="flex items-center gap-3">
+                <button onclick="togglePlayAudio('${msg.id}', this)" class="w-10 h-10 rounded-full ${msg.fromMe ? 'bg-white text-teal-700 shadow' : 'bg-teal-500 text-white shadow'} flex items-center justify-center font-bold text-base hover:scale-105 active:scale-95 transition flex-shrink-0" title="Reproduzir áudio">
+                  ▶️
+                </button>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1 h-5 overflow-hidden">
+                    <span class="w-1 h-3 rounded-full ${msg.fromMe ? 'bg-white/80' : 'bg-teal-500/80'}"></span>
+                    <span class="w-1 h-5 rounded-full ${msg.fromMe ? 'bg-white' : 'bg-teal-500'}"></span>
+                    <span class="w-1 h-2 rounded-full ${msg.fromMe ? 'bg-white/60' : 'bg-teal-500/60'}"></span>
+                    <span class="w-1 h-6 rounded-full ${msg.fromMe ? 'bg-white' : 'bg-teal-500'}"></span>
+                    <span class="w-1 h-4 rounded-full ${msg.fromMe ? 'bg-white/80' : 'bg-teal-500/80'}"></span>
+                    <span class="w-1 h-2 rounded-full ${msg.fromMe ? 'bg-white/60' : 'bg-teal-500/60'}"></span>
+                    <span class="w-1 h-5 rounded-full ${msg.fromMe ? 'bg-white' : 'bg-teal-500'}"></span>
+                    <span class="w-1 h-3 rounded-full ${msg.fromMe ? 'bg-white/70' : 'bg-teal-500/70'}"></span>
+                    <span class="w-1 h-4 rounded-full ${msg.fromMe ? 'bg-white/80' : 'bg-teal-500/80'}"></span>
+                    <span class="w-1 h-2 rounded-full ${msg.fromMe ? 'bg-white/60' : 'bg-teal-500/60'}"></span>
+                  </div>
+                  <div class="flex justify-between items-center text-[10px] font-mono ${msg.fromMe ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'} mt-1">
+                    <span>${msg.duration || '0:05'}</span>
+                    <span>Mensagem de Voz 🎙️</span>
+                  </div>
+                </div>
+              </div>
+              <audio id="audio-elem-${msg.id}" src="${msg.audioUrl}" preload="auto" class="hidden" onended="onAudioEnded('${msg.id}')"></audio>
+              <div class="flex items-center justify-end gap-1 text-[10px] ${msg.fromMe ? 'text-white/90' : 'text-gray-400 dark:text-white/60'} font-mono mt-1">
+                <span>${msg.time}</span>
+                ${msg.fromMe ? '<span class="text-emerald-200 font-bold">✓✓</span>' : ''}
+              </div>
+            </div>
+          `;
+        } else {
+          bubble.innerHTML = `
+            <div class="max-w-[75%] md:max-w-[60%] rounded-2xl px-4 py-2.5 shadow-sm text-sm relative break-words ${
+              msg.fromMe 
+                ? 'bg-gradient-to-r from-[#0284c7] via-[#229ED9] to-[#10b981] text-white rounded-br-xs shadow-md' 
+                : 'bg-white dark:bg-tg-bubbleIn text-gray-800 dark:text-gray-100 rounded-bl-xs border border-gray-200/50 dark:border-transparent'
+            }">
+              ${senderHeader}
+              <div class="mb-1 leading-relaxed whitespace-pre-line">${formatMessageText(msg.text)}</div>
+              <div class="flex items-center justify-end gap-1.5 text-[10px] ${msg.fromMe ? 'text-white/90' : 'text-gray-400 dark:text-white/60'} font-mono -mb-0.5">
+                <button onclick="speakMessageText(this, '${encodeURIComponent(msg.text)}')" class="hover:scale-125 transition p-0.5 opacity-60 hover:opacity-100 cursor-pointer" title="Ouvir em voz alta 🔊">🔊</button>
+                <span>${msg.time}</span>
+                ${msg.fromMe ? '<span class="text-emerald-200 font-bold">✓✓</span>' : ''}
+              </div>
+            </div>
+          `;
+        }
         container.appendChild(bubble);
       });
 
       container.scrollTop = container.scrollHeight;
+    }
+
+    function togglePlayAudio(msgId, btn) {
+      const audio = document.getElementById(`audio-elem-${msgId}`);
+      if (!audio) return;
+      if (audio.paused) {
+        document.querySelectorAll('audio').forEach(a => {
+          if (a !== audio) {
+            a.pause();
+            a.currentTime = 0;
+            const otherBtn = a.parentElement?.querySelector('button');
+            if (otherBtn) otherBtn.innerHTML = '▶️';
+          }
+        });
+        audio.play().then(() => {
+          btn.innerHTML = '⏸️';
+        }).catch(err => {
+          console.error("Erro ao reproduzir áudio:", err);
+        });
+      } else {
+        audio.pause();
+        btn.innerHTML = '▶️';
+      }
+    }
+
+    function onAudioEnded(msgId) {
+      const audio = document.getElementById(`audio-elem-${msgId}`);
+      if (audio) {
+        const btn = audio.parentElement?.querySelector('button');
+        if (btn) btn.innerHTML = '▶️';
+      }
     }
 
     function sendMessage() {
@@ -1234,12 +2047,18 @@
       if (!chat) return;
 
       const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const msgId = 'msg_' + Date.now();
 
-      chat.messages.push({
+      const newMsg = {
+        id: msgId,
         text: text,
+        senderId: currentUserId,
+        senderName: currentUserName,
         fromMe: true,
         time: timeNow
-      });
+      };
+
+      chat.messages.push(newMsg);
 
       input.value = '';
       playZapSound('sent');
@@ -1248,7 +2067,495 @@
       renderChatList();
 
       document.getElementById('emoji-picker').classList.add('hidden');
-      triggerAutoReply(chat, text);
+      broadcastMessageSync(activeChatId, newMsg);
+
+      if (chat.category === 'bots') {
+        triggerAutoReply(chat, text);
+      }
+    }
+
+    // ================= GRAVAÇÃO NATIVA DE ÁUDIO (WHATSAPP / TELEGRAM) =================
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingInterval = null;
+    let recordingSeconds = 0;
+
+    async function toggleAudioRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        stopAndSendAudioRecording();
+        return;
+      }
+
+      const btnMic = document.getElementById('btn-mic');
+
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("Navegador sem suporte a getUserMedia");
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        recordingSeconds = 0;
+
+        let options = {};
+        if (typeof MediaRecorder !== 'undefined') {
+          if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            options = { mimeType: 'audio/mp4' };
+          } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            options = { mimeType: 'audio/webm' };
+          }
+        }
+
+        mediaRecorder = new MediaRecorder(stream, options);
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data && e.data.size > 0) {
+            audioChunks.push(e.data);
+          }
+        };
+
+        mediaRecorder.start(100);
+
+        if (btnMic) {
+          btnMic.classList.add('bg-rose-500', 'text-white', 'animate-pulse', 'ring-4', 'ring-rose-400/50');
+          btnMic.classList.remove('bg-teal-500/10', 'text-teal-600', 'dark:text-teal-400');
+        }
+
+        document.getElementById('recording-bar').classList.remove('hidden');
+        document.getElementById('recording-timer').textContent = '00:00';
+
+        clearInterval(recordingInterval);
+        recordingInterval = setInterval(() => {
+          recordingSeconds++;
+          const m = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+          const s = String(recordingSeconds % 60).padStart(2, '0');
+          document.getElementById('recording-timer').textContent = `${m}:${s}`;
+        }, 1000);
+
+      } catch (err) {
+        console.warn("Acesso ao microfone ou simulação:", err);
+        const btnMic = document.getElementById('btn-mic');
+        if (btnMic) {
+          btnMic.classList.remove('bg-rose-500', 'text-white', 'animate-pulse', 'ring-4', 'ring-rose-400/50');
+          btnMic.classList.add('bg-teal-500/10', 'text-teal-600', 'dark:text-teal-400');
+        }
+        simulateVoiceNote();
+      }
+    }
+
+    function cancelAudioRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        mediaRecorder.stream?.getTracks().forEach(t => t.stop());
+      }
+      mediaRecorder = null;
+      clearInterval(recordingInterval);
+      document.getElementById('recording-bar').classList.add('hidden');
+      const btnMic = document.getElementById('btn-mic');
+      if (btnMic) {
+        btnMic.classList.remove('bg-rose-500', 'text-white', 'animate-pulse', 'ring-4', 'ring-rose-400/50');
+        btnMic.classList.add('bg-teal-500/10', 'text-teal-600', 'dark:text-teal-400');
+      }
+      audioChunks = [];
+    }
+
+    function stopAndSendAudioRecording() {
+      if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+
+      const durationStr = document.getElementById('recording-timer').textContent;
+      const btnMic = document.getElementById('btn-mic');
+      if (btnMic) {
+        btnMic.classList.remove('bg-rose-500', 'text-white', 'animate-pulse', 'ring-4', 'ring-rose-400/50');
+        btnMic.classList.add('bg-teal-500/10', 'text-teal-600', 'dark:text-teal-400');
+      }
+
+      mediaRecorder.onstop = () => {
+        clearInterval(recordingInterval);
+        document.getElementById('recording-bar').classList.add('hidden');
+        mediaRecorder.stream?.getTracks().forEach(t => t.stop());
+
+        const mime = mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(audioChunks, { type: mime });
+        audioChunks = [];
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Audio = reader.result;
+          const chat = chats.find(c => c.id === activeChatId);
+          if (!chat) return;
+
+          const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const msgId = 'aud_' + Date.now();
+
+          const newAudioMsg = {
+            id: msgId,
+            text: '🎙️ Mensagem de voz',
+            isAudio: true,
+            audioUrl: base64Audio,
+            duration: durationStr,
+            senderId: currentUserId,
+            senderName: currentUserName,
+            fromMe: true,
+            time: timeNow
+          };
+
+          chat.messages.push(newAudioMsg);
+          playZapSound('sent');
+          saveChats();
+          renderMessages();
+          renderChatList();
+
+          broadcastMessageSync(activeChatId, newAudioMsg);
+
+          if (chat.category === 'bots') {
+            setTimeout(() => {
+              triggerAutoReply(chat, "Áudio recebido com clareza cristalina!");
+            }, 800);
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      mediaRecorder.stop();
+    }
+
+    function simulateVoiceNote() {
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const msgId = 'aud_' + Date.now();
+      const wavBase64 = createSyntheticVoiceWav();
+
+      const simulatedMsg = {
+        id: msgId,
+        text: '🎙️ Mensagem de voz',
+        isAudio: true,
+        audioUrl: wavBase64,
+        duration: '00:03',
+        senderId: currentUserId,
+        senderName: currentUserName,
+        fromMe: true,
+        time: timeNow
+      };
+
+      chat.messages.push(simulatedMsg);
+      playZapSound('sent');
+      saveChats();
+      renderMessages();
+      renderChatList();
+      broadcastMessageSync(activeChatId, simulatedMsg);
+
+      showToastNotification(chat, {
+        text: '🎙️ Áudio gravado! (Para usar sua voz real, autorize o microfone no cadeado 🔒).'
+      });
+
+      if (chat.category === 'bots') {
+        setTimeout(() => {
+          triggerAutoReply(chat, "Áudio recebido com clareza cristalina!");
+        }, 800);
+      }
+    }
+
+    function audioBufferToWav(buffer) {
+      const numOfChan = buffer.numberOfChannels;
+      const length = buffer.length * numOfChan * 2 + 44;
+      const out = new DataView(new ArrayBuffer(length));
+      let pos = 0;
+
+      function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+      function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+
+      setUint32(0x46464952); // "RIFF"
+      setUint32(length - 8);
+      setUint32(0x45564157); // "WAVE"
+      setUint32(0x20746d66); // "fmt "
+      setUint32(16);
+      setUint16(1); // PCM
+      setUint16(numOfChan);
+      setUint32(buffer.sampleRate);
+      setUint32(buffer.sampleRate * 2 * numOfChan);
+      setUint16(numOfChan * 2);
+      setUint16(16);
+      setUint32(0x61746164); // "data"
+      setUint32(length - pos - 4);
+
+      for (let i = 0; i < buffer.length; i++) {
+        for (let ch = 0; ch < numOfChan; ch++) {
+          let sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+          out.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          pos += 2;
+        }
+      }
+      return new Blob([out.buffer], { type: 'audio/wav' });
+    }
+
+    // ================= SISTEMA DE CONTATOS & NOVO CHAT =================
+    let selectedNewChatCategory = 'all';
+    let selectedAvatarEmojiChar = '👤';
+
+    function openNewChatModal() {
+      document.getElementById('new-chat-name').value = '';
+      document.getElementById('new-chat-handle').value = '';
+      selectNewChatCategory('all');
+      selectAvatarEmoji('👤');
+      document.getElementById('modal-new-chat').classList.remove('hidden');
+    }
+
+    function closeNewChatModal() {
+      document.getElementById('modal-new-chat').classList.add('hidden');
+    }
+
+    function selectNewChatCategory(cat, btn) {
+      selectedNewChatCategory = cat;
+      document.querySelectorAll('.new-chat-cat-btn').forEach(b => {
+        b.className = 'new-chat-cat-btn py-2 rounded-xl text-xs font-bold border border-gray-200 dark:border-tg-border text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tg-panel';
+      });
+      if (btn) {
+        btn.className = 'new-chat-cat-btn py-2 rounded-xl text-xs font-bold border border-teal-500 bg-teal-500/10 text-teal-600 dark:text-teal-400';
+      }
+    }
+
+    function selectAvatarEmoji(emoji, btn) {
+      selectedAvatarEmojiChar = emoji;
+      document.querySelectorAll('.avatar-opt').forEach(b => {
+        b.className = 'avatar-opt w-9 h-9 rounded-full bg-gray-100 dark:bg-tg-panel text-lg flex items-center justify-center border-2 border-transparent';
+      });
+      if (btn) {
+        btn.className = 'avatar-opt w-9 h-9 rounded-full bg-teal-500/20 text-lg flex items-center justify-center border-2 border-teal-500';
+      }
+    }
+
+    function createNewChat() {
+      const nameInput = document.getElementById('new-chat-name');
+      const handleInput = document.getElementById('new-chat-handle');
+      const name = nameInput.value.trim();
+      const handle = handleInput.value.trim();
+
+      if (!name) {
+        alert('Por favor, informe o nome do contato, grupo ou canal.');
+        nameInput.focus();
+        return;
+      }
+
+      const newId = Date.now();
+      const isChannel = selectedNewChatCategory === 'channels';
+      const isGroup = selectedNewChatCategory === 'groups';
+
+      const newChat = {
+        id: newId,
+        name: name,
+        handle: handle || `@${name.toLowerCase().replace(/\s+/g, '_')}`,
+        category: selectedNewChatCategory,
+        avatarBg: 'bg-gradient-to-tr from-teal-600 to-emerald-500',
+        avatarText: selectedAvatarEmojiChar || '💬',
+        status: isChannel ? 'canal • 1 inscrito' : (isGroup ? 'grupo • 2 membros' : 'online • visto por último hoje'),
+        isChannel: isChannel,
+        unread: 0,
+        messages: [
+          {
+            id: 'm_init_' + newId,
+            text: `🎉 Conversa criada no ZAPGRAM com **${name}** (${handle || 'Contato'}).\nVocê já pode trocar mensagens de texto e áudios com qualidade de estúdio!`,
+            fromMe: false,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]
+      };
+
+      chats.unshift(newChat);
+      saveChats();
+      closeNewChatModal();
+      selectChat(newId);
+      triggerConfetti();
+      playZapSound('sent');
+    }
+
+    // ================= SINCRONIZAÇÃO EM TEMPO REAL MULTIUSUÁRIO =================
+    const globalSyncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('zapgram_global_sync') : null;
+
+    if (globalSyncChannel) {
+      globalSyncChannel.onmessage = (event) => {
+        const data = event.data;
+        if (!data || !data.message) return;
+
+        if (data.type === 'NEW_MESSAGE') {
+          if (data.senderId === currentUserId) return;
+          const targetChat = chats.find(c => c.id === data.chatId);
+          if (targetChat) {
+            const exists = targetChat.messages.some(m => m.id === data.message.id);
+            if (!exists) {
+              const incomingMsg = {
+                ...data.message,
+                senderName: data.senderName || 'Familiar',
+                fromMe: false
+              };
+              targetChat.messages.push(incomingMsg);
+              if (activeChatId !== targetChat.id) {
+                targetChat.unread = (targetChat.unread || 0) + 1;
+              }
+              saveChats();
+              notifyIncomingMessage(targetChat.id, incomingMsg);
+              if (activeChatId === targetChat.id) {
+                renderMessages();
+              }
+              renderChatList();
+            }
+          }
+        }
+      };
+    }
+
+    // ================= REDE EM TEMPO REAL DA FAMÍLIA (MQTT SOBRE WEBSOCKETS) =================
+    let mqttClient = null;
+    const MQTT_TOPIC_FAMILY = 'zapgram/familia/leite_v1';
+
+    function initMqtt() {
+      try {
+        if (typeof mqtt !== 'undefined' && !mqttClient) {
+          mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+            clientId: 'zapgram_' + currentUserId + '_' + Math.random().toString(16).substring(2, 6),
+            clean: true,
+            reconnectPeriod: 2500
+          });
+
+          mqttClient.on('connect', () => {
+            console.log('✅ ZAPGRAM conectado à nuvem em tempo real da família!');
+            mqttClient.subscribe(MQTT_TOPIC_FAMILY + '/#');
+          });
+
+          mqttClient.on('message', (topic, payload) => {
+            try {
+              const data = JSON.parse(payload.toString());
+              if (!data || !data.message) return;
+
+              // Ignorar se foi enviado por este mesmo aparelho
+              if (data.senderId === currentUserId) return;
+
+              const targetChat = chats.find(c => c.id === data.chatId);
+              if (targetChat) {
+                const exists = targetChat.messages.some(m => m.id === data.message.id);
+                if (!exists) {
+                  const incomingMsg = {
+                    ...data.message,
+                    senderName: data.senderName || 'Familiar',
+                    fromMe: false
+                  };
+                  targetChat.messages.push(incomingMsg);
+                  if (activeChatId !== targetChat.id) {
+                    targetChat.unread = (targetChat.unread || 0) + 1;
+                  }
+                  saveChats();
+                  notifyIncomingMessage(targetChat.id, incomingMsg);
+                  if (activeChatId === targetChat.id) {
+                    renderMessages();
+                  }
+                  renderChatList();
+                }
+              }
+            } catch (e) {
+              console.warn("MQTT parse:", e);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("MQTT init:", err);
+      }
+    }
+
+    function broadcastMessageSync(chatId, messageObj) {
+      if (globalSyncChannel) {
+        try {
+          globalSyncChannel.postMessage({
+            type: 'NEW_MESSAGE',
+            chatId: chatId,
+            senderId: currentUserId,
+            senderName: currentUserName,
+            message: messageObj
+          });
+        } catch (e) {
+          console.warn("BroadcastChannel post error:", e);
+        }
+      }
+
+      if (mqttClient && mqttClient.connected) {
+        try {
+          mqttClient.publish(`${MQTT_TOPIC_FAMILY}/${chatId}`, JSON.stringify({
+            type: 'NEW_MESSAGE',
+            chatId: chatId,
+            senderId: currentUserId,
+            senderName: currentUserName,
+            message: messageObj
+          }));
+        } catch (e) {
+          console.warn("MQTT publish error:", e);
+        }
+      }
+
+      syncWithFirebaseCloud(chatId, messageObj);
+    }
+
+    let firebaseRoomRef = null;
+    function initFirebaseRealtime() {
+      try {
+        if (typeof firebase !== 'undefined' && firebase.database) {
+          const firebaseConfig = {
+            databaseURL: "https://zapgram-network-default-rtdb.firebaseio.com"
+          };
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          const db = firebase.database();
+          firebaseRoomRef = db.ref('global_room_messages');
+
+          firebaseRoomRef.limitToLast(25).on('child_added', (snapshot) => {
+            const val = snapshot.val();
+            if (val && val.id) {
+              const globalChat = chats.find(c => c.id === 99);
+              if (globalChat) {
+                const exists = globalChat.messages.some(m => m.id === val.id);
+                if (!exists) {
+                  globalChat.messages.push({
+                    id: val.id,
+                    text: val.text,
+                    isAudio: !!val.isAudio,
+                    audioUrl: val.audioUrl || null,
+                    duration: val.duration || null,
+                    fromMe: val.senderId === currentUserId || (currentUserRole === 'fundador' && val.senderId === 'founder_oziel'),
+                    time: val.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  });
+                  saveChats();
+                  if (activeChatId === 99) {
+                    renderMessages();
+                  }
+                  renderChatList();
+                }
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.log("Firebase status:", e);
+      }
+    }
+
+    function syncWithFirebaseCloud(chatId, messageObj) {
+      if (chatId === 99 && firebaseRoomRef) {
+        try {
+          firebaseRoomRef.push({
+            id: messageObj.id,
+            text: messageObj.text,
+            isAudio: !!messageObj.isAudio,
+            audioUrl: messageObj.audioUrl || null,
+            duration: messageObj.duration || null,
+            senderId: currentUserId || (currentUserRole === 'fundador' ? 'founder_oziel' : 'user_esposa'),
+            senderName: currentUserName + (currentUserRole === 'fundador' ? ' (Fundador)' : ''),
+            time: messageObj.time,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          console.warn("Firebase sync error:", e);
+        }
+      }
     }
 
     // ================= CONTROLE DO CÉREBRO DE IA (GOOGLE GEMINI) =================
@@ -1409,11 +2716,280 @@
       // ================= CURIOSIDADES & DIA A DIA =================
       if (t.includes('piada')) return "Por que os elétrons nunca são convidados para festas? Porque eles são muito negativos! 😂⚡";
       if (t.includes('conselho') || t.includes('dica')) return "💡 **Conselho de ouro:** A consistência diária de 20 minutos constrói impérios muito mais rápido do que picos esporádicos de esforço!";
-      if (t.includes('como você está') || t.includes('tudo bem') || t.includes('tudo bom')) return "Estou excelente e 100% pronto para suas ordens, Fundador Oziel! Em que posso te ajudar hoje? ⚡";
-      if (t.includes('obrigado') || t.includes('valeu') || t.includes('grato')) return "Por nada, Oziel! Sempre que precisar, é só me mandar uma mensagem! 🚀";
+      if (t.includes('como você está') || t.includes('tudo bem') || t.includes('tudo bom')) {
+        return currentUserRole === 'fundador' 
+          ? "Estou excelente e 100% pronto para suas ordens, Fundador Oziel! Em que posso te ajudar hoje? ⚡" 
+          : `Estou excelente e 100% pronto para te ajudar, ${currentUserName}! Em que posso te apoiar hoje? ⚡`;
+      }
+      if (t.includes('obrigado') || t.includes('valeu') || t.includes('grato')) {
+        return `Por nada, ${currentUserName}! Sempre que precisar, é só me mandar uma mensagem! 🚀`;
+      }
 
       // Resposta inteligente abrangente para qualquer outra pergunta
-      return `Olá, Oziel! Analisei sua pergunta sobre **"${text}"**.\n\nPara ter respostas completas com páginas de explicações detalhadas, você pode conectar a chave gratuita do **Google Gemini 1.5 Flash** clicando no menu lateral ☰ > **Cérebro dos ZapBots (IA)**!\n\n💡 Se precisar de cálculos, capitais, ciência, receitas ou ajuda com o ZAPGRAM, pode me perguntar diretamente aqui! ⚡`;
+      return `Olá, ${currentUserName}! Analisei sua pergunta sobre **"${text}"**.\n\nPara ter respostas completas com páginas de explicações detalhadas, você pode conectar a chave gratuita do **Google Gemini 1.5 Flash** clicando no menu lateral ☰ > **Cérebro dos ZapBots (IA)**!\n\n💡 Se precisar de cálculos, capitais, ciência, receitas ou ajuda com o ZAPGRAM, pode me perguntar diretamente aqui! ⚡`;
+    }
+
+    // ================= BANCO DE PERGUNTAS & SISTEMA INTELIGENTE DO DUO CORUJA 🦉 =================
+    const duoQuizQuestions = [
+      {
+        q: 'Como se diz "Avião de Papel" em inglês?',
+        options: ['Paper Airplane', 'Green Bird', 'Blue Message'],
+        correct: 0,
+        explanation: '"Paper Airplane" é o avião de papel — exatamente o símbolo do ZAPGRAM! 🚀'
+      },
+      {
+        q: 'Como se diz "Bom dia" em espanhol?',
+        options: ['Buenas noches', 'Buenos días', 'Hasta luego'],
+        correct: 1,
+        explanation: '"Buenos días" é a saudação matinal padrão nos países que falam espanhol! ☀️'
+      },
+      {
+        q: 'Qual é o passado do verbo "to go" (ir) em inglês?',
+        options: ['Goed', 'Gone', 'Went'],
+        correct: 2,
+        explanation: '"Went" é o passado irregular de "to go". Exemplo: *I went home* (Eu fui para casa). 🏃‍♂️'
+      },
+      {
+        q: 'Como se diz "Obrigado" em inglês?',
+        options: ['Please', 'Thank you', 'Welcome'],
+        correct: 1,
+        explanation: '"Thank you" (ou "Thanks") é a maneira clássica de agradecer em inglês! 🙏'
+      },
+      {
+        q: 'Como se diz "Família" em espanhol?',
+        options: ['Familia', 'Amigos', 'Casa'],
+        correct: 0,
+        explanation: '"Familia" em espanhol se escreve quase idêntico, com pronúncia suave no "L"! 👨‍👩‍👧‍👦'
+      },
+      {
+        q: 'Qual destas palavras significa "Café da manhã" em inglês?',
+        options: ['Lunch', 'Dinner', 'Breakfast'],
+        correct: 2,
+        explanation: '"Breakfast" é o café da manhã (literalmente "quebrar o jejum"). ☕🥞'
+      },
+      {
+        q: 'Como se diz "Água, por favor" em inglês?',
+        options: ['Water, please', 'Bread, thank you', 'Milk, now'],
+        correct: 0,
+        explanation: '"Water, please" é uma frase essencial para qualquer viagem internacional! 💧'
+      },
+      {
+        q: 'O que significa a expressão em inglês "Piece of cake"?',
+        options: ['Pedaço de bolo', 'Algo muito fácil', 'Comida gostosa'],
+        correct: 1,
+        explanation: 'É uma expressão idiomática que significa "moleza" ou "mamão com açúcar"! 🍰✨'
+      },
+      {
+        q: 'Como se diz "Como você está?" em espanhol?',
+        options: ['¿Dónde estás?', '¿Cómo estás?', '¿Quién eres?'],
+        correct: 1,
+        explanation: '"¿Cómo estás?" é a pergunta clássica e carinhosa em espanhol! 🇪🇸'
+      },
+      {
+        q: 'Qual é o plural de "Child" (criança) em inglês?',
+        options: ['Childs', 'Children', 'Childrens'],
+        correct: 1,
+        explanation: '"Children" é o plural irregular. Em inglês nunca se usa "childs"! 🧒👧'
+      },
+      {
+        q: 'Como se diz "Por favor" em espanhol?',
+        options: ['Por favor', 'De nada', 'Disculpe'],
+        correct: 0,
+        explanation: '"Por favor" tem a mesma grafia e sentido universal de gentileza! 🤝'
+      },
+      {
+        q: 'Qual é o oposto da palavra "Hot" (quente) em inglês?',
+        options: ['Cold', 'Warm', 'Dark'],
+        correct: 0,
+        explanation: '"Cold" significa frio/gelado! Exemplo: *Cold water* (Água gelada). ❄️'
+      },
+      {
+        q: 'Como se diz "Livro" em inglês?',
+        options: ['Door', 'Book', 'Table'],
+        correct: 1,
+        explanation: '"Book" é livro! Exemplo: *I love reading books* (Eu amo ler livros). 📚'
+      },
+      {
+        q: 'Como se diz "Te amo" em espanhol?',
+        options: ['Te amo / Te quiero', 'Me gustas', 'Hasta mañana'],
+        correct: 0,
+        explanation: '"Te amo" ou "Te quiero" expressam profundo carinho em espanhol! ❤️'
+      },
+      {
+        q: 'O que significa o phrasal verb "Give up" em inglês?',
+        options: ['Subir', 'Desistir', 'Agradecer'],
+        correct: 1,
+        explanation: '"Never give up" significa nunca desista! Continue praticando todos os dias! 🦉🔥'
+      }
+    ];
+
+    let duoState = {
+      currentQuestionIndex: 0,
+      inQuiz: false,
+      xp: 175,
+      streak: 4,
+      correctCount: 5,
+      totalAnswered: 6
+    };
+
+    try {
+      const storedDuo = localStorage.getItem('zapgram_duo_state');
+      if (storedDuo) duoState = { ...duoState, ...JSON.parse(storedDuo) };
+    } catch(e) {}
+
+    function saveDuoState() {
+      localStorage.setItem('zapgram_duo_state', JSON.stringify(duoState));
+    }
+
+    function formatQuizQuestion(qObj, index) {
+      return `🦉 **DESAFIO DUO (#${index + 1} de ${duoQuizQuestions.length}):**\n${qObj.q}\n\n🅰️) ${qObj.options[0]}\n🅱️) ${qObj.options[1]}\n🅲) ${qObj.options[2]}\n\n*(Toque nos botões rápidos abaixo ou digite A, B ou C!)*`;
+    }
+
+    function getDuoEngineResponse(lower, originalText) {
+      // 1. Comando de Iniciar ou Avançar Quiz
+      if (lower.startsWith('/quiz') || lower === 'quiz' || lower === 'jogar' || lower.includes('proxima') || lower.includes('próxima') || lower === 'comecar' || lower === 'começar') {
+        duoState.inQuiz = true;
+        saveDuoState();
+        setTimeout(() => renderBotKeyboard(activeChatId), 150);
+        const qObj = duoQuizQuestions[duoState.currentQuestionIndex];
+        return formatQuizQuestion(qObj, duoState.currentQuestionIndex);
+      }
+
+      // 2. Resposta ao Quiz Atual (A, B ou C)
+      const isAnswerA = lower === 'a' || lower === 'letra a' || lower === 'opção a' || lower === 'opcao a' || lower.startsWith('a)') || lower === '🅰️ opção a';
+      const isAnswerB = lower === 'b' || lower === 'letra b' || lower === 'opção b' || lower === 'opcao b' || lower.startsWith('b)') || lower === '🅱️ opção b';
+      const isAnswerC = lower === 'c' || lower === 'letra c' || lower === 'opção c' || lower === 'opcao c' || lower.startsWith('c)') || lower === '🅲 opção c';
+
+      const currentQ = duoQuizQuestions[duoState.currentQuestionIndex];
+      const selectedIndex = isAnswerA ? 0 : (isAnswerB ? 1 : (isAnswerC ? 2 : -1));
+
+      let answeredByText = -1;
+      if (selectedIndex === -1 && duoState.inQuiz) {
+        currentQ.options.forEach((opt, idx) => {
+          if (lower.includes(opt.toLowerCase())) answeredByText = idx;
+        });
+      }
+
+      const finalChoice = selectedIndex !== -1 ? selectedIndex : answeredByText;
+
+      if (finalChoice !== -1) {
+        duoState.totalAnswered++;
+        let feedback = "";
+
+        if (finalChoice === currentQ.correct) {
+          duoState.xp += 25;
+          duoState.correctCount++;
+          duoState.streak++;
+          triggerConfetti();
+          playZapSound('premium');
+          feedback = `🎉 **RESPOSTA CORRETA!** +25 XP! 🔥\n${currentQ.explanation}\n\n🏆 **Seu Desempenho:** ${duoState.xp} XP | Ofensiva: ${duoState.streak} dias 🔥`;
+        } else {
+          duoState.xp += 5;
+          const letter = ['A', 'B', 'C'][currentQ.correct];
+          const text = currentQ.options[currentQ.correct];
+          feedback = `😅 **Quase lá!** A resposta correta era **${letter}) ${text}**.\n💡 *${currentQ.explanation}*\n\nNão desanime, errando é que se aprende! (+5 XP de participação)`;
+        }
+
+        // Passar automaticamente para a próxima pergunta!
+        duoState.currentQuestionIndex = (duoState.currentQuestionIndex + 1) % duoQuizQuestions.length;
+        saveDuoState();
+        setTimeout(() => renderBotKeyboard(activeChatId), 150);
+
+        const nextQ = duoQuizQuestions[duoState.currentQuestionIndex];
+        return `${feedback}\n\n━━━━━━━━━━━━━━━━━━━━\n${formatQuizQuestion(nextQ, duoState.currentQuestionIndex)}`;
+      }
+
+      // 3. Status e XP
+      if (lower.startsWith('/status') || lower.includes('meu xp') || lower.includes('meu progresso') || lower === 'xp' || lower === 'placar') {
+        const nivel = duoState.xp >= 300 ? 'Avançado 🚀' : (duoState.xp >= 150 ? 'Intermediário ⚡' : 'Iniciante 🦉');
+        return `🦉 **BOLETIM DO ALUNO ZAPGRAM:**\n• 👤 **Estudante:** Oziel Leite\n• ⚡ **Total de XP:** ${duoState.xp} XP\n• 🔥 **Ofensiva:** ${duoState.streak} dias seguidos\n• 🎯 **Acertos no Quiz:** ${duoState.correctCount} de ${duoState.totalAnswered} respondidas\n• 🏅 **Nível Atual:** ${nivel}\n\n💡 Toque em **/quiz** para responder a próxima pergunta e subir de nível!`;
+      }
+
+      // 4. Dica de estudo
+      if (lower.startsWith('/dica') || lower === 'dica' || lower.includes('conselho de estudo')) {
+        const dicas = [
+          '📖 **Dica de Fluência:** Pratique 10 minutos por dia em vez de 2 horas uma vez por semana. O cérebro fixa idiomas por repetição frequente! 🦉',
+          '🎧 **Técnica de Shadowing:** Ouça uma frase em inglês e repita imediatamente imitando a entonação do falante nativo. Isso destrava a fala rápido!',
+          '🎬 **Dica de Séries:** Assista a seus filmes e séries favoritos com áudio em inglês e legendas também em inglês. Sua mente associará som e escrita!',
+          '🗣️ **Fale em Voz Alta:** Use o botão de áudio 🎙️ do ZAPGRAM para treinar frases gravando sua própria voz e escutando!'
+        ];
+        return dicas[Math.floor(Math.random() * dicas.length)];
+      }
+
+      // 5. Conversação Básica em Inglês
+      if (lower === 'hello' || lower.startsWith('hello duo') || lower === 'hi' || lower === 'hey') {
+        return "Hello Oziel! Great to see you! How is your day going? Ready to earn some XP and practice your English? 🦉🇺🇸\n\n*(Type **/quiz** to start a challenge!)*";
+      }
+      if (lower.includes('how are you')) {
+        return "I'm doing fantastic, thank you for asking! Feeling energetic and ready to teach! How about you, are you ready for today's lesson? 😊🦉";
+      }
+      if (lower.includes('good morning')) return "Good morning, Oziel! Have a wonderful and productive day ahead! ☀️☕ Ready to boost your vocabulary?";
+      if (lower.includes('good afternoon')) return "Good afternoon! The perfect time for a quick 5-minute English workout! 🚀";
+      if (lower.includes('good night')) return "Good night! Sleep well, dream in English, and don't forget to keep your streak tomorrow! 🌙🦉";
+      if (lower.includes('thank you') || lower === 'thanks') return "You are very welcome, Oziel! Anytime you want to practice or translate words, I'm here for you! 🦉💚";
+
+      // 6. Conversação Básica em Espanhol
+      if (lower === 'hola' || lower.startsWith('hola duo') || lower.includes('buenos dias') || lower.includes('buenos días')) {
+        return "¡Hola Oziel! ¡Qué gusto saludarte! ¿Cómo estás hoy? ¿Listo para aprender y practicar español conmigo? 🦉🇪🇸\n\n*(Escribe **/quiz** para jugar!)*";
+      }
+      if (lower.includes('como estas') || lower.includes('cómo estás') || lower.includes('que tal') || lower.includes('qué tal')) {
+        return "¡Estoy excelente, muy contento y con muchas ganas de enseñarte! ¿Y tú, qué tal tu día? 😊🦉";
+      }
+      if (lower.includes('gracias')) return "¡De nada, Oziel! ¡Es un gran placer ayudarte a dominar nuevos idiomas! 🦉✨";
+
+      // 7. Traduções Inteligentes Rápidas (Offline)
+      if (lower.includes('como se diz') || lower.includes('como fala') || lower.includes('o que significa') || lower.startsWith('/traduzir') || lower.startsWith('traduzir')) {
+        if (lower.includes('bom dia')) return "☀️ **Bom dia:**\n• Em inglês: **Good morning** (pronúncia: *gud mórnin*)\n• Em espanhol: **Buenos días** (pronúncia: *buenos días*)";
+        if (lower.includes('obrigado') || lower.includes('obrigada')) return "🙏 **Obrigado:**\n• Em inglês: **Thank you** (pronúncia: *ténk iú*) ou **Thanks**\n• Em espanhol: **Gracias** (pronúncia: *grácias*)";
+        if (lower.includes('família') || lower.includes('familia')) return "👨‍👩‍👧‍👦 **Família:**\n• Em inglês: **Family** (pronúncia: *fémili*)\n• Em espanhol: **Familia**";
+        if (lower.includes('amigo')) return "🤝 **Amigo:**\n• Em inglês: **Friend** (pronúncia: *frênd*)\n• Em espanhol: **Amigo**";
+        if (lower.includes('casa')) return "🏡 **Casa:**\n• Em inglês: **House** (ou **Home** para lar)\n• Em espanhol: **Casa**";
+        if (lower.includes('amor')) return "❤️ **Amor:**\n• Em inglês: **Love** (pronúncia: *lâv*)\n• Em espanhol: **Amor**";
+        if (lower.includes('carro')) return "🚗 **Carro:**\n• Em inglês: **Car**\n• Em espanhol: **Coche** ou **Auto**";
+        if (lower.includes('água') || lower.includes('agua')) return "💧 **Água:**\n• Em inglês: **Water** (pronúncia: *uóter*)\n• Em espanhol: **Agua**";
+        if (lower.includes('dinheiro')) return "💵 **Dinheiro:**\n• Em inglês: **Money** (pronúncia: *mâni*)\n• Em espanhol: **Dinero**";
+      }
+
+      // 8. Resposta Inteligente Geral do Duo
+      return `🦉 **Duo Coruja:** Olá Oziel! Analisei sua mensagem: **"${originalText}"**.\n\nSou seu treinador oficial de idiomas no ZAPGRAM! Posso te ensinar inglês e espanhol, tirar dúvidas e fazer quizzes!\n\n💡 **Comandos:**\n• 🦉 **/quiz** - Responder perguntas desafiadoras e ganhar XP!\n• 🔥 **/status** - Ver seu placar, nível e dias de ofensiva!\n• 📖 **/dica** - Dica prática de estudos!`;
+    }
+
+    // ================= MOTOR INTELIGENTE TRADERBOT NEXUS 📈 =================
+    function getTraderBotResponse(lower, originalText) {
+      if (lower.startsWith('/btc') || lower === 'btc') {
+        return `📊 **Bitcoin (BTC/USDT) - Análise em Tempo Real:**\n• 💵 **Preço Atual:** $68.750,00 (+4.2% em 24h)\n• 📈 **Tendência:** Alta Consistente (Bullish Momentum)\n• 🛡️ **Suporte Imediato:** $66.500 | Suporte Forte: $64.200\n• 🎯 **Resistência Principal:** $70.000 (Máxima Histórica em teste)\n• 📊 **RSI (14):** 62.4 (Zona neutra-compradora favorável)\n• 💡 **Resumo Técnico:** Entrada institucional crescente através de ETFs; acumulação forte de baleias. 🚀`;
+      }
+      if (lower.startsWith('/eth') || lower === 'eth') {
+        return `💎 **Ethereum (ETH/USDT) - Análise Técnica:**\n• 💵 **Preço Atual:** $3.620,00 (+3.1% em 24h)\n• 📊 **Volume Diário:** $18.4 Bilhões\n• 🛡️ **Suporte:** $3.450 | 🎯 **Resistência:** $3.800\n• ⛽ **Gás Médio Gwei:** 14 Gwei (Excelente momento para transações)\n• 🏦 **Staking APR:** 3.8% ao ano\n• 💡 **Resumo:** Rompimento da LTB de 3 semanas com volume comprador acima da média móvel de 50 períodos! 📈`;
+      }
+      if (lower.startsWith('/sol') || lower === 'sol') {
+        return `⚡ **Solana (SOL/USDT) - Alta Performance:**\n• 💵 **Preço Atual:** $184.20 (+7.8% em 24h)\n• 🚀 **Desempenho 7D:** +18.4%\n• ⚡ **Velocidade de Rede:** 2.850 TPS (Transações por segundo)\n• 🛡️ **Suporte:** $172.00 | 🎯 **Resistência:** $195.00 e $210.00\n• 💡 **Resumo:** Crescimento exponencial de volume em DEX e DeFi na rede Solana! 🏎️`;
+      }
+      if (lower.startsWith('/bnb') || lower === 'bnb') {
+        return `🟡 **BNB Chain (BNB/USDT) - Ecossistema:**\n• 💵 **Preço Atual:** $594.50 (+1.9% em 24h)\n• 🛡️ **Suporte:** $575.00 | 🎯 **Resistência:** $620.00\n• 🔥 **Queima Automática Trimestral:** 1.9M BNB retirados de circulação\n• 💡 **Resumo:** Alta demanda impulsionada por novos Launchpools e taxas reduzidas na Binance! 💰`;
+      }
+      if (lower.startsWith('/sinal') || lower === 'sinal' || lower.includes('sinal')) {
+        return `🎯 **SINAL QUANTITATIVO ZAP-QUANT #842:**\n• 🪙 **Par:** BTC/USDT\n• ⚡ **Ação:** COMPRA FORTE (STRONG BUY)\n• 🎯 **Preço de Entrada:** $68.200 - $68.600\n• 🎯 **Alvo 1 (Take Profit 1):** $69.800 (+2.1%)\n• 🎯 **Alvo 2 (Take Profit 2):** $71.500 (+4.6%)\n• 🎯 **Alvo 3 (Take Profit 3):** $74.000 (+8.2%)\n• 🛑 **Stop Loss Obrigatório:** $66.400 (-2.9%)\n• ⚖️ **Relação Risco/Retorno:** 1 : 2.8\n\n*(Lembre-se: Gerenciamento de risco é fundamental. Nunca arrisque mais de 2% da banca por operação!)*`;
+      }
+      if (lower.startsWith('/mercado') || lower === 'mercado' || lower.includes('mercado')) {
+        return `📈 **TERMÔMETRO GLOBAL DO MERCADO (MACRO):**\n• 🌍 **Capitalização Total Cripto:** $2.68 Trilhões (+3.4% em 24h)\n• ⚡ **Dominância do Bitcoin:** 54.8%\n• 🔥 **Índice Medo & Ganância (Fear & Greed):** 74 (Ganância / Otimismo Saudável)\n• 🏦 **Fluxo Líquido de ETFs (BTC Spot):** +$382 Milhões ontem\n• 🌐 **Tendência Geral:** Ciclo de expansão e alta liquidez nos mercados de risco!`;
+      }
+      if (lower.startsWith('/noticias') || lower === 'noticias' || lower === 'notícias') {
+        return `📰 **RADAR DE NOTÍCIAS CRIPTO EM TEMPO REAL:**\n\n1️⃣ **Wall Street acelera aportes em Bitcoin:** Fundos soberanos e fundos de pensão começam a divulgar posições oficiais em ETFs.\n\n2️⃣ **Rede Solana registra recorde de carteiras ativas diárias:** Adoção de pagamentos instantâneos Web3 cresce mais de 40% este mês.\n\n3️⃣ **Regulamentação e Cripto no Brasil:** Banco Central avança nos testes do DREX com integração de smart contracts empresariais.\n\n💡 Digite **/sinal** para receber uma oportunidade de trade montada pelos algoritmos!`;
+      }
+      if (lower.startsWith('/carteira') || lower === 'carteira' || lower === 'portfolio' || lower === 'portfólio') {
+        return `💼 **SIMULADOR DE CARTEIRA RECOMENDADA (PERFIL CRESCIMENTO):**\n• 🟠 **Bitcoin (BTC):** 45% (Reserva de Valor Inabalável)\n• 🔵 **Ethereum (ETH):** 25% (Contratos Inteligentes & Finanças Descentralizadas)\n• 🟣 **Solana (SOL):** 15% (Alta Velocidade & Microtransações)\n• 🟡 **Caixa / Stablecoins (USDT/USDC):** 10% (Oportunidades de Queda)\n• ⭐ **ZapStars ZAPGRAM:** 5% (Monetização Master)\n\n📊 **Rentabilidade Histórica Simulada (12 meses):** +142.8%!\n💡 Rebalanceie sua carteira trimestralmente para travar lucros.`;
+      }
+      if (lower.startsWith('/dica') || lower.includes('dica') || lower.startsWith('/educacao') || lower.includes('conselho')) {
+        const dicas = [
+          '🧠 **Regra Número 1:** Preserve seu capital! O maior erro do iniciante é entrar alavancado sem Stop Loss. Quem sobrevive às correções colhe os frutos das altas históricas.',
+          '⏳ **A Magia do DCA (Dollar-Cost Averaging):** Comprar pequenas frações fixas toda semana bate mais de 90% dos traders que tentam prever o fundo exato do mercado!',
+          '🔐 **Segurança Máxima:** Cripto de longo prazo fica guardada em Cold Wallet (hardware wallet). "Not your keys, not your coins!"',
+          '📊 **Não opere por emoção (FOMO):** Quando todo mundo estiver eufórico na TV, realize lucro parcial. Quando houver pânico irracional, procure compras de valor.'
+        ];
+        return dicas[Math.floor(Math.random() * dicas.length)];
+      }
+      return null;
     }
 
     async function triggerAutoReply(chat, userText) {
@@ -1427,14 +3003,26 @@
       // ================= ATALHOS / COMANDOS RÁPIDOS =================
       if (chat.id === 1) { // ZAPGRAM Assistant
         if (lower.startsWith('/saldo') || lower === 'saldo' || lower === 'meu saldo') {
-          reply = `⭐ **Saldo da Tesouraria:** Você possui atualmente **${formatNumber(zapStars)} ZapStars** (20 dígitos - 10 Quintilhões)! Você tem poderes ilimitados de emissão e apoio.`;
+          if (currentUserRole === 'fundador') {
+            reply = `⭐ **Saldo da Tesouraria:** Você possui atualmente **${formatNumber(zapStars)} ZapStars** (20 dígitos - 10 Quintilhões)! Você tem poderes ilimitados de emissão e apoio.`;
+          } else {
+            reply = `⭐ **Saldo Família VIP:** Você possui atualmente **1.000 ZapStars** disponíveis para enviar presentes e apoiar conversas!`;
+          }
         } else if (lower.startsWith('/ajuda') || lower.startsWith('/help') || lower === 'ajuda' || lower === 'comandos') {
-          reply = `💡 **Comandos do ZAPGRAM Assistant:**\n• ⭐ **/saldo** - Ver saldo de 20 dígitos (10 Quintilhões ⭐)\n• 👑 **/fundador** - Detalhes da conta master de Oziel Leite\n• 🎉 **/doar** - Doar 10.000 ZapStars com confetes\n• 🎨 **/logo** - Conhecer a história do ícone híbrido\n• 🌙 **/tema** - Alternar modo escuro e claro\n• 🤖 **Perguntas Livres** - Pode me perguntar QUALQUER COISA: ciência, história, receitas, conselhos ou tecnologia!`;
+          if (currentUserRole === 'fundador') {
+            reply = `💡 **Comandos do ZAPGRAM Assistant:**\n• ⭐ **/saldo** - Ver saldo de 20 dígitos (10 Quintilhões ⭐)\n• 👑 **/fundador** - Detalhes da conta master de Oziel Leite\n• 🎉 **/doar** - Doar 10.000 ZapStars com confetes\n• 🎨 **/logo** - Conhecer a história do ícone híbrido\n• 🌙 **/tema** - Alternar modo escuro e claro\n• 🤖 **Perguntas Livres** - Pode me perguntar QUALQUER COISA: ciência, história, receitas, conselhos ou tecnologia!`;
+          } else {
+            reply = `💡 **Comandos do ZAPGRAM Assistant:**\n• ⭐ **/saldo** - Ver saldo da sua Carteira VIP (1.000 ⭐)\n• 👨‍👩‍👧‍👦 **/perfil** - Ver detalhes da sua conta Família VIP\n• 🎁 **/doar** - Enviar estrelas de presente\n• 🎨 **/logo** - Conhecer a história do ícone híbrido\n• 🌙 **/tema** - Alternar modo escuro e claro\n• 🤖 **Perguntas Livres** - Pode me perguntar QUALQUER COISA: ciência, história, receitas, conselhos ou tecnologia!`;
+          }
         } else if (lower.startsWith('/fundador')) {
           reply = `👑 **Credenciais do Fundador:**\n• **Idealizador:** Oziel Leite\n• **Cargo:** CEO & Arquiteto Master do ZAPGRAM\n• **Selo:** VIP Estrela de Ouro Vitalícia ⭐\n• **Permissão:** Isenção total de anúncios e faturamento de 50% dos canais!`;
+        } else if (lower.startsWith('/perfil')) {
+          reply = `👨‍👩‍👧‍👦 **Perfil Família VIP:**\n• **Usuário:** ${currentUserName}\n• **Status:** Conectada à Família Leite\n• **Benefícios:** Acesso livre a bots, canais e mensagens em tempo real sem anúncios!`;
         } else if (lower.startsWith('/doar')) {
           sendFounderTip();
-          reply = `🎉 Doação de 10.000 ZapStars enviada com sucesso! Uma chuva de confetes foi disparada na sua tela! ✨`;
+          reply = currentUserRole === 'fundador' 
+            ? `🎉 Doação de 10.000 ZapStars enviada com sucesso! Uma chuva de confetes foi disparada na sua tela! ✨` 
+            : `🎁 Estrela de apoio enviada com sucesso! 🎉`;
         } else if (lower.startsWith('/logo')) {
           reply = `🎨 **Identidade Híbrida do ZAPGRAM:**\nO ícone une o balão de fala oficial do WhatsApp desenhado no Azul clássico do Telegram, contendo no interior o aviãozinho de papel do Telegram estilizado no Verde do WhatsApp. O melhor dos dois mundos! 🚀`;
         } else if (lower.startsWith('/tema')) {
@@ -1442,33 +3030,23 @@
           reply = isDarkMode ? "🌙 Modo Noturno ativado com sucesso!" : "☀️ Modo Claro ativado com sucesso!";
         }
       } else if (chat.id === 3) { // Duo Coruja
-        if (lower.startsWith('/quiz') || lower === 'quiz') {
-          reply = `🦉 **DUO QUIZ DE INGLÊS:**\nComo se diz "Avião de Papel" em inglês?\n\nA) Paper Airplane\nB) Green Bird\nC) Blue Message\n\n*(Responda digitando apenas A, B ou C!)*`;
-        } else if (lower === 'a' || lower === 'letra a' || lower.includes('paper airplane')) {
-          reply = `🎉 **CORRETO!** 'Paper Airplane' é exatamente o aviãozinho de papel do ZAPGRAM! +25 XP e ofensiva mantida! 🔥🦉`;
-        } else if (lower === 'b' || lower === 'c') {
-          reply = `Quase lá! A resposta correta era a **A) Paper Airplane**. Mas não desista, pratique todo dia! 🦉`;
-        } else if (lower.startsWith('/dica')) {
-          reply = `📖 **Dica de Fluência:** Dedique 10 minutos diários a ouvir conteúdos em áudio. A consistência gera mais resultado do que horas isoladas! 🦉`;
-        }
+        reply = getDuoEngineResponse(lower, userText);
       } else if (chat.id === 5) { // TraderBot Nexus
-        if (lower.startsWith('/btc') || lower === 'btc') {
-          reply = `📊 **Bitcoin (BTC/USDT):** $68.750,00 (+4.2% em 24h)\n• Resistência: $70.000\n• Suporte: $66.500\n• Tendência: Alta consistente 🚀`;
-        } else if (lower.startsWith('/eth') || lower === 'eth') {
-          reply = `💎 **Ethereum (ETH/USDT):** $3.620,00 (+3.1% em 24h)\n• Volume 24h: $18.4 bilhões\n• Projeção: Rompimento iminente! 📈`;
-        } else if (lower.startsWith('/sinal') || lower === 'sinal') {
-          reply = `⚡ **SINAL TÉCNICO ZAP-QUANT:**\n• Par: BTC/USDT\n• Ação: **COMPRA FORTE (STRONG BUY)**\n• Entrada: $68.500\n• Alvo 1: $69.800 | Alvo 2: $71.200\n• Stop Loss: $66.800`;
-        } else if (lower.startsWith('/mercado') || lower === 'mercado') {
-          reply = `📈 **Termômetro Global Crypto:**\n• Capitalização Total: $2.64 Trilhões\n• Índice Medo & Ganância: 76 (Ganância Extrema)\n• Dominância BTC: 54.2%`;
-        }
+        reply = getTraderBotResponse(lower, userText);
       } else if (chat.id === 2) {
         reply = `📢 Atualização recebida pela moderação do canal oficial Nexus Crypto!`;
       } else if (chat.id === 4) {
-        const devReplies = [
-          "Concordo totalmente com o Fundador Oziel! 💻",
-          "O frontend desse app ficou muito limpo, código de altíssimo nível!",
-          "Essa ideia do ícone híbrido WhatsApp + Telegram ficou sensacional!"
-        ];
+        const devReplies = currentUserRole === 'fundador'
+          ? [
+              "Concordo totalmente com o Fundador Oziel! 💻",
+              "O frontend desse app ficou muito limpo, código de altíssimo nível!",
+              "Essa ideia do ícone híbrido WhatsApp + Telegram ficou sensacional!"
+            ]
+          : [
+              `Concordo plenamente com você, ${currentUserName}! 💻`,
+              "O aplicativo está funcionando perfeitamente em tempo real!",
+              "Esse app está incrível!"
+            ];
         reply = devReplies[Math.floor(Math.random() * devReplies.length)];
       }
 
@@ -1476,13 +3054,13 @@
       if (!reply) {
         let systemPrompt = "";
         if (chat.id === 1) {
-          systemPrompt = "Você é o ZAPGRAM Assistant, inteligência artificial avançada e amigável da rede ZAPGRAM, idealizada pelo Fundador Oziel Leite. Responda a qualquer dúvida ou conversa do usuário com muita inteligência, clareza, detalhes e simpatia (como o ChatGPT ou Google Gemini). Se perguntarem sobre o ZAPGRAM, mencione Oziel Leite como Fundador. Responda em português.";
+          systemPrompt = `Você é o ZAPGRAM Assistant, inteligência artificial avançada e amigável da rede ZAPGRAM, conversando com ${currentUserName}. Responda a qualquer dúvida ou conversa do usuário com muita inteligência, clareza, detalhes e simpatia (como o ChatGPT ou Google Gemini). Se perguntarem sobre a criação do ZAPGRAM, mencione que foi idealizado por Oziel Leite. Responda em português.`;
         } else if (chat.id === 3) {
-          systemPrompt = "Você é o Duo, a coruja do Duolingo e professor de línguas do ZAPGRAM conversando com Oziel Leite. Ajude a ensinar inglês e espanhol, traduza frases, tire dúvidas gramaticais e converse com entusiasmo e emojis.";
+          systemPrompt = `Você é o Duo, a coruja do Duolingo e professor de línguas do ZAPGRAM conversando com ${currentUserName}. Ajude a ensinar inglês e espanhol, traduza frases, tire dúvidas gramaticais e converse com entusiasmo e emojis.`;
         } else if (chat.id === 5) {
-          systemPrompt = "Você é o TraderBot Nexus, analista financeiro e de criptomoedas do ZAPGRAM. Explique investimentos, economia, blockchain e finanças com precisão e clareza.";
+          systemPrompt = `Você é o TraderBot Nexus, analista financeiro e de criptomoedas do ZAPGRAM conversando com ${currentUserName}. Explique investimentos, economia, blockchain e finanças com precisão e clareza.`;
         } else {
-          systemPrompt = "Você é um participante ativo do grupo de tecnologia Devs Brasil conversando no ZAPGRAM.";
+          systemPrompt = `Você é um participante ativo do grupo de tecnologia Devs Brasil conversando no ZAPGRAM com ${currentUserName}.`;
         }
 
         reply = await queryAI(systemPrompt, userText);
@@ -1491,14 +3069,16 @@
       typingIndicator.classList.add('hidden');
 
       const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      chat.messages.push({
+      const botMsgObj = {
         text: reply,
         fromMe: false,
-        time: replyTime
-      });
+        time: replyTime,
+        senderName: chat.name
+      };
+      chat.messages.push(botMsgObj);
 
-      playZapSound('received');
       saveChats();
+      notifyIncomingMessage(chat.id, botMsgObj);
       renderMessages();
       renderChatList();
     }
@@ -1558,10 +3138,417 @@
       document.getElementById('chat-window').classList.add('hidden', 'md:flex');
     }
 
+    // ================= SELETOR DE EMOJIS & FIGURINHAS (2 ABAS) =================
+    function switchPickerTab(tab) {
+      const viewEmojis = document.getElementById('picker-view-emojis');
+      const viewStickers = document.getElementById('picker-view-stickers');
+      const tabEmojis = document.getElementById('picker-tab-emojis');
+      const tabStickers = document.getElementById('picker-tab-stickers');
+
+      if (tab === 'emojis') {
+        if (viewEmojis) viewEmojis.classList.remove('hidden');
+        if (viewStickers) viewStickers.classList.add('hidden');
+        if (tabEmojis) tabEmojis.className = 'flex-1 py-1.5 rounded-xl bg-white dark:bg-tg-sidebar shadow-xs text-teal-600 dark:text-teal-400 font-bold transition flex items-center justify-center gap-1';
+        if (tabStickers) tabStickers.className = 'flex-1 py-1.5 rounded-xl text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition flex items-center justify-center gap-1 font-normal';
+      } else {
+        if (viewStickers) viewStickers.classList.remove('hidden');
+        if (viewEmojis) viewEmojis.classList.add('hidden');
+        if (tabStickers) tabStickers.className = 'flex-1 py-1.5 rounded-xl bg-white dark:bg-tg-sidebar shadow-xs text-teal-600 dark:text-teal-400 font-bold transition flex items-center justify-center gap-1';
+        if (tabEmojis) tabEmojis.className = 'flex-1 py-1.5 rounded-xl text-gray-500 dark:text-tg-muted hover:text-gray-900 dark:hover:text-white transition flex items-center justify-center gap-1 font-normal';
+      }
+    }
+
+    function sendSticker(char, label) {
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const msgId = 'stk_' + Date.now();
+
+      const newMsg = {
+        id: msgId,
+        text: `[Figurinha: ${label || char}]`,
+        isSticker: true,
+        sticker: char,
+        stickerLabel: label || 'Figurinha ZAPGRAM',
+        senderId: currentUserId,
+        senderName: currentUserName,
+        fromMe: true,
+        time: timeNow
+      };
+
+      chat.messages.push(newMsg);
+      playZapSound('sent');
+      saveChats();
+      renderMessages();
+      renderChatList();
+
+      document.getElementById('emoji-picker')?.classList.add('hidden');
+      broadcastMessageSync(activeChatId, newMsg);
+
+      if (chat.category === 'bots') {
+        setTimeout(() => {
+          triggerAutoReply(chat, `[Figurinha: ${label || char}]`);
+        }, 400);
+      }
+    }
+
+    // ================= PROCESSAMENTO E ENVIO DE FOTOS / CÂMERA =================
+    function handleImageSelected(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      e.target.value = '';
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 900;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          sendImageMessage(compressed);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function sendImageMessage(base64Data) {
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const msgId = 'img_' + Date.now();
+
+      const newMsg = {
+        id: msgId,
+        text: '📷 Foto enviada',
+        isImage: true,
+        imageUrl: base64Data,
+        senderId: currentUserId,
+        senderName: currentUserName,
+        fromMe: true,
+        time: timeNow
+      };
+
+      chat.messages.push(newMsg);
+      playZapSound('sent');
+      saveChats();
+      renderMessages();
+      renderChatList();
+
+      broadcastMessageSync(activeChatId, newMsg);
+
+      if (chat.category === 'bots') {
+        setTimeout(() => {
+          triggerAutoReply(chat, "Foto enviada");
+        }, 500);
+      }
+    }
+
+    // ================= LIGHTBOX MODAL PARA FOTOS EM TELA CHEIA =================
+    function openImageLightbox(url) {
+      const modal = document.getElementById('modal-image-lightbox');
+      const img = document.getElementById('lightbox-img');
+      if (!modal || !img) return;
+      img.src = url;
+      modal.classList.remove('hidden');
+    }
+
+    function closeImageLightbox() {
+      const modal = document.getElementById('modal-image-lightbox');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeImageLightbox();
+      }
+    });
+
+    // ================= SISTEMA DE NOTIFICAÇÕES (TOAST, PUSH & VIBRAÇÃO) =================
+    async function requestNotificationPermission() {
+      if (!("Notification" in window)) {
+        alert("Este dispositivo ou navegador não suporta notificações do sistema.");
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        showToastNotification({ name: 'ZAPGRAM Notificações' }, { text: 'Notificações já estão 100% ativas no seu aparelho! 🔔' });
+        return;
+      }
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          showToastNotification({ name: 'ZAPGRAM Notificações' }, { text: '✅ Notificações ativadas! Você receberá avisos em tempo real.' });
+          playZapSound('login');
+          triggerConfetti();
+        } else {
+          showToastNotification({ name: 'ZAPGRAM' }, { text: 'Permissão de notificação recusada.' });
+        }
+      } catch (e) {
+        console.warn("Notification permission error:", e);
+      }
+    }
+
+    function showToastNotification(chat, msg) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto flex items-center gap-3 p-3.5 bg-white dark:bg-tg-sidebar border border-teal-500/50 rounded-2xl shadow-2xl backdrop-blur transform -translate-y-2 opacity-0 transition-all duration-300 cursor-pointer hover:scale-[1.02]';
+
+      const preview = msg.isImage ? '📷 Foto' : (msg.isAudio ? '🎙️ Mensagem de voz' : (msg.isSticker ? `🎭 ${msg.stickerLabel || 'Figurinha'}` : (msg.text || 'Nova mensagem')));
+      const sender = msg.senderName || chat.name || 'ZAPGRAM';
+
+      toast.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md">
+          🔔
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-black text-teal-600 dark:text-teal-400 flex items-center justify-between">
+            <span class="truncate">${sender}</span>
+            <span class="text-[10px] font-mono text-gray-400 font-normal">agora</span>
+          </div>
+          <p class="text-xs text-gray-700 dark:text-gray-200 truncate mt-0.5">${preview}</p>
+        </div>
+      `;
+
+      toast.onclick = () => {
+        if (chat.id) selectChat(chat.id);
+        toast.remove();
+      };
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('-translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 350);
+      }, 4000);
+    }
+
+    function notifyIncomingMessage(chatId, msg) {
+      const chat = chats.find(c => c.id === chatId);
+      if (!chat) return;
+
+      playZapSound('received');
+
+      if ('vibrate' in navigator) {
+        try {
+          navigator.vibrate([100, 50, 100]);
+        } catch (e) {}
+      }
+
+      if (activeChatId !== chatId || document.hidden) {
+        showToastNotification(chat, msg);
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            const sender = msg.senderName || chat.name || 'ZAPGRAM';
+            const body = msg.isImage ? '📷 Enviou uma foto' : (msg.isAudio ? '🎙️ Enviou um áudio' : (msg.isSticker ? `🎭 Figurinha: ${msg.stickerLabel || ''}` : msg.text));
+            new Notification(`ZAPGRAM • ${sender}`, {
+              body: body,
+              icon: 'https://raw.githubusercontent.com/ozielleite144/zapgram/main/favicon.ico'
+            });
+          } catch (e) {
+            console.warn("Notification trigger error:", e);
+          }
+        }
+      }
+    }
+
+    // ================= SISTEMA DE CHAMADA DE VOZ AO VIVO (WHATSAPP CALL) =================
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let callRingTimeout = null;
+    let callRingInterval = null;
+
+    function playTelephoneTone() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        [440, 480].forEach(freq => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.setValueAtTime(0.08, now + 1.2);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 1.25);
+        });
+      } catch (e) {}
+    }
+
+    function playDisconnectTone() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        [0, 0.25, 0.5].forEach(delay => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.setValueAtTime(425, now + delay);
+          gain.gain.setValueAtTime(0.12, now + delay);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + delay);
+          osc.stop(now + delay + 0.2);
+        });
+      } catch (e) {}
+    }
+
+    function startVoiceCall() {
+      const chat = chats.find(c => c.id === activeChatId);
+      if (!chat) return;
+
+      const modal = document.getElementById('modal-voice-call');
+      if (!modal) return;
+
+      document.getElementById('call-contact-name').textContent = chat.name;
+      const avatarEl = document.getElementById('call-contact-avatar');
+      if (chat.id === 1) {
+        avatarEl.innerHTML = '⚡';
+      } else {
+        avatarEl.innerHTML = chat.avatarText || '👤';
+      }
+
+      const statusEl = document.getElementById('call-status-label');
+      statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span><span>Chamando...</span>';
+
+      modal.classList.remove('hidden');
+
+      // Tocar som de chamada telefônica
+      playTelephoneTone();
+      clearInterval(callRingInterval);
+      callRingInterval = setInterval(playTelephoneTone, 3500);
+
+      clearTimeout(callRingTimeout);
+      clearInterval(callTimerInterval);
+      callSeconds = 0;
+
+      // Atendimento automático demonstrativo da ligação
+      callRingTimeout = setTimeout(() => {
+        clearInterval(callRingInterval);
+        playZapSound('received');
+
+        callTimerInterval = setInterval(() => {
+          callSeconds++;
+          const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+          const s = String(callSeconds % 60).padStart(2, '0');
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-emerald-400 font-bold">Conectado • ${m}:${s}</span>`;
+        }, 1000);
+
+        // Saudação por voz real do Bot ou Contato (SpeechSynthesis)
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          let speechText = currentUserRole === 'fundador'
+            ? `Olá Fundador Oziel! Ligação de voz conectada com sucesso no ZAPGRAM com ${chat.name}!`
+            : `Olá ${currentUserName}! Ligação de voz conectada com sucesso no ZAPGRAM com ${chat.name}!`;
+          if (chat.id === 3) speechText = (currentUserRole === 'fundador' ? "Hello Oziel!" : `Hello ${currentUserName}!`) + " Duo here, ready for our language lesson!";
+          if (chat.id === 5) speechText = "TraderBot conectado! Relatório financeiro ao vivo para você.";
+          const utter = new SpeechSynthesisUtterance(speechText);
+          utter.lang = chat.id === 3 ? 'en-US' : 'pt-BR';
+          utter.rate = 1.0;
+          window.speechSynthesis.speak(utter);
+        }
+      }, 3500);
+    }
+
+    function endVoiceCall() {
+      const modal = document.getElementById('modal-voice-call');
+      if (!modal) return;
+
+      clearInterval(callRingInterval);
+      clearTimeout(callRingTimeout);
+      clearInterval(callTimerInterval);
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      playDisconnectTone();
+      modal.classList.add('hidden');
+
+      const chat = chats.find(c => c.id === activeChatId);
+      if (chat && callSeconds > 0) {
+        const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const s = String(callSeconds % 60).padStart(2, '0');
+        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        chat.messages.push({
+          id: 'call_' + Date.now(),
+          text: `📞 **Chamada de Áudio Finalizada**\n• Duração: ${m}:${s}\n• Qualidade de voz: Alta definição HD ✨`,
+          fromMe: true,
+          time: timeNow
+        });
+        saveChats();
+        renderMessages();
+        renderChatList();
+      }
+    }
+
+    function toggleCallMute(btn) {
+      const isMuted = btn.classList.toggle('bg-rose-500');
+      btn.querySelector('span:first-child').textContent = isMuted ? '🔇' : '🎤';
+      btn.querySelector('span:last-child').textContent = isMuted ? 'Mutado' : 'Mudo';
+    }
+
+    function toggleCallSpeaker(btn) {
+      const isSpeaker = btn.classList.toggle('bg-teal-500');
+      btn.querySelector('span:last-child').textContent = isSpeaker ? 'Ativo' : 'Viva-voz';
+    }
+
+    // ================= LEITURA DE MENSAGENS EM VOZ ALTA (TEXT-TO-SPEECH) =================
+    function speakMessageText(btn, encodedText) {
+      if (!('speechSynthesis' in window)) {
+        alert("Seu navegador não possui sintetizador de voz integrado.");
+        return;
+      }
+      const text = decodeURIComponent(encodedText).replace(/\*\*/g, '').replace(/\[.*?\]/g, '');
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        btn.textContent = '🔊';
+        return;
+      }
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'pt-BR';
+      if (/hello|good morning|how are you|quiz/i.test(text) && activeChatId === 3) {
+        utter.lang = 'en-US';
+      }
+      utter.onstart = () => { btn.textContent = '⏹️'; };
+      utter.onend = () => { btn.textContent = '🔊'; };
+      utter.onerror = () => { btn.textContent = '🔊'; };
+      window.speechSynthesis.speak(utter);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+      checkUrlLoginParams();
       applyTheme();
       updateStarsDisplay();
       updateAIStatusDisplay();
+      updateUserProfileUI();
+      initFirebaseRealtime();
+      initMqtt();
     });
   </script>
 </body>
